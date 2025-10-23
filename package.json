@@ -1,0 +1,72 @@
+{
+  "name": "@mgcrea/react-native-jetpack-compose",
+  "version": "0.10.0",
+  "description": "Jetpack Compose components for React Native",
+  "author": "Olivier Louvignes <olivier@mgcrea.io> (https://github.com/mgcrea)",
+  "homepage": "https://github.com/mgcrea/react-native-jetpack-compose#readme",
+  "repository": "github:mgcrea/react-native-jetpack-compose",
+  "license": "MIT",
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "files": [
+    "src",
+    "dist",
+    "android"
+  ],
+  "scripts": {
+    "dev": "cd example; npm run dev",
+    "logcat": "adb logcat --clear && adb logcat -s ReactNative:V ReactNativeJS:V AndroidRuntime:E *:S",
+    "codegen": "react-native codegen --platform android --outputPath android/generated",
+    "prettify": "prettier --write src/",
+    "build": "npm run build:babel && npm run build:types",
+    "build:babel": "babel src --out-dir dist --extensions \".ts,.tsx,.js,.jsx\" --copy-files",
+    "build:types": "tsc --emitDeclarationOnly",
+    "lint": "eslint .",
+    "check": "tsc --noEmit",
+    "spec": "NODE_OPTIONS=--experimental-require-module jest",
+    "test": "npm run lint && npm run check && npm run spec",
+    "prepare": "npm run build"
+  },
+  "peerDependencies": {
+    "react": "*",
+    "react-native": "*"
+  },
+  "devDependencies": {
+    "@babel/cli": "^7.28.3",
+    "@babel/core": "^7.28.4",
+    "@babel/runtime": "^7.28.4",
+    "@jest/globals": "^30.2.0",
+    "@mgcrea/eslint-config-react-native": "^0.13.0",
+    "@react-native-community/cli": "^20.0.2",
+    "@react-native/babel-preset": "0.82.1",
+    "@react-native/typescript-config": "0.82.1",
+    "@testing-library/react-native": "^13.3.3",
+    "@types/react": "^19.2.2",
+    "babel-plugin-module-resolver": "^5.0.2",
+    "eslint": "^9.38.0",
+    "jest": "^30.2.0",
+    "prettier": "^3.6.2",
+    "prettier-plugin-organize-imports": "^4.3.0",
+    "react": "^19.2.0",
+    "react-native": "0.82.1",
+    "typescript": "^5.9.3"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "codegenConfig": {
+    "name": "RNJetpackComposeSpec",
+    "type": "components",
+    "jsSrcsDir": "src",
+    "outputDir": {
+      "ios": "ios/generated",
+      "android": "android/generated"
+    },
+    "android": {
+      "javaPackageName": "com.mgcrea.reactnative.jetpackcompose"
+    },
+    "includesGeneratedCode": true
+  },
+  "packageManager": "pnpm@10.19.0"
+}

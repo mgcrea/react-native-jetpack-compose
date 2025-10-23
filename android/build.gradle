@@ -1,0 +1,78 @@
+def safeExtGet(prop, fallback) {
+  return rootProject.ext.has(prop) ? rootProject.ext.get(prop) : fallback
+}
+
+def isNewArchitectureEnabled() {
+  return project.hasProperty("newArchEnabled") && project.newArchEnabled == "true"
+}
+
+plugins {
+  id 'com.android.library'
+  id 'org.jetbrains.kotlin.android'
+}
+
+apply plugin: 'org.jetbrains.kotlin.plugin.compose'
+
+if (isNewArchitectureEnabled()) {
+  apply plugin: 'com.facebook.react'
+}
+
+if (isNewArchitectureEnabled()) {
+  react {
+    libraryName = "rnjetpackcomposespec"
+  }
+}
+
+android {
+  namespace 'com.mgcrea.reactnative.jetpackcompose'
+  compileSdk = safeExtGet('compileSdkVersion', 34)
+
+  defaultConfig {
+    minSdkVersion safeExtGet('minSdkVersion', 21)
+    targetSdkVersion safeExtGet('targetSdkVersion', 34)
+    consumerProguardFiles 'consumer-rules.pro'
+
+    if (isNewArchitectureEnabled()) {
+      buildConfigField "boolean", "IS_NEW_ARCHITECTURE_ENABLED", "true"
+      ndk {
+        def architectures = project.hasProperty("reactNativeArchitectures")
+          ? project.getProperty("reactNativeArchitectures").split(",")
+          : ["armeabi-v7a", "arm64-v8a", "x86", "x86_64"]
+        abiFilters (*architectures)
+      }
+    }
+  }
+
+  sourceSets {
+    main {
+      java.srcDirs += ["${projectDir}/generated/java"]
+    }
+  }
+
+  compileOptions {
+    sourceCompatibility JavaVersion.VERSION_17
+    targetCompatibility JavaVersion.VERSION_17
+  }
+
+  kotlinOptions {
+    jvmTarget = '17'
+  }
+
+  buildFeatures {
+    compose = true
+  }
+}
+
+dependencies {
+  implementation 'com.facebook.react:react-android'
+  implementation "org.jetbrains.kotlin:kotlin-stdlib:${safeExtGet('kotlinVersion', '1.9.24')}"
+
+  // Jetpack Compose dependencies
+  def composeBom = platform('androidx.compose:compose-bom:2024.02.00')
+  implementation composeBom
+  implementation 'androidx.compose.ui:ui'
+  implementation 'androidx.compose.ui:ui-tooling-preview'
+  implementation 'androidx.compose.material3:material3'
+  implementation 'androidx.activity:activity-compose:1.8.2'
+  debugImplementation 'androidx.compose.ui:ui-tooling'
+}

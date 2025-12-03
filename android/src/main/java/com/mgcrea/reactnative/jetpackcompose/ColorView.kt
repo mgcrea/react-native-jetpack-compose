@@ -1,6 +1,7 @@
 package com.mgcrea.reactnative.jetpackcompose
 
 import android.graphics.Color
+import android.util.Log
 import android.view.View
 import com.facebook.react.uimanager.ThemedReactContext
 
@@ -10,7 +11,8 @@ internal class ColorView(context: ThemedReactContext) : View(context) {
     val parsed = value?.let {
       try {
         Color.parseColor(it)
-      } catch (_: IllegalArgumentException) {
+      } catch (e: IllegalArgumentException) {
+        Log.w(TAG, "Invalid color value: '$it', using default black")
         null
       }
     } ?: DEFAULT_COLOR
@@ -18,6 +20,7 @@ internal class ColorView(context: ThemedReactContext) : View(context) {
   }
 
   companion object {
+    private const val TAG = "ColorView"
     private const val DEFAULT_COLOR: Int = 0xFF000000.toInt()
   }
 }

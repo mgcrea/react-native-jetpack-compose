@@ -21,18 +21,18 @@ function toEpochMillis(date: Date | number | string | undefined | null): number 
 /**
  * Year range configuration.
  */
-export interface YearRange {
+export type YearRange = {
   start: number;
   end: number;
-}
+};
 
 /**
  * Represents a date range with start and end dates.
  */
-export interface DateRange {
+export type DateRange = {
   startDate: Date | null;
   endDate: Date | null;
-}
+};
 
 /**
  * Props for the DateRangePicker component.

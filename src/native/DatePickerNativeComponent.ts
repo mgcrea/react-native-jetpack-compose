@@ -12,6 +12,7 @@ export interface ConfirmEvent {
 /**
  * Event payload for the onCancel event.
  */
+// eslint-disable-next-line @typescript-eslint/no-empty-object-type
 export interface CancelEvent {}
 
 /**

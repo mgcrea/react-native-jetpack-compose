@@ -21,10 +21,10 @@ function toEpochMillis(date: Date | number | string | undefined | null): number 
 /**
  * Year range configuration.
  */
-export interface YearRange {
+export type YearRange = {
   start: number;
   end: number;
-}
+};
 
 /**
  * Props for the DatePicker component.

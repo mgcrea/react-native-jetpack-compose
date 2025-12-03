@@ -1,8 +1,12 @@
 package com.mgcrea.reactnative.jetpackcompose
 
-import android.util.Log
-import android.view.View
-import android.widget.FrameLayout
+import android.annotation.SuppressLint
+import android.app.Dialog
+import android.graphics.Color
+import android.graphics.drawable.ColorDrawable
+import android.view.ViewGroup
+import android.view.Window
+import androidx.activity.ComponentDialog
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.DatePickerDialog
@@ -20,22 +24,19 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.ComposeView
 import androidx.compose.ui.unit.dp
-import com.facebook.react.bridge.Arguments
-import com.facebook.react.bridge.UiThreadUtil
-import com.facebook.react.bridge.WritableMap
 import com.facebook.react.uimanager.ThemedReactContext
-import com.facebook.react.uimanager.events.RCTEventEmitter
+import com.mgcrea.reactnative.jetpackcompose.core.DialogHostView
 
 @OptIn(ExperimentalMaterial3Api::class)
-internal class DateRangePickerView(private val reactContext: ThemedReactContext) :
-  FrameLayout(reactContext) {
+@SuppressLint("ViewConstructor")
+internal class DateRangePickerView(reactContext: ThemedReactContext) :
+  DialogHostView(reactContext, TAG) {
 
   companion object {
     private const val TAG = "DateRangePickerView"
   }
 
-  // State backing
-  private val _visible = mutableStateOf(false)
+  // State backing for Compose
   private val _isInline = mutableStateOf(false)
   private val _startDateMillis = mutableStateOf<Long?>(null)
   private val _endDateMillis = mutableStateOf<Long?>(null)
@@ -50,20 +51,9 @@ internal class DateRangePickerView(private val reactContext: ThemedReactContext)
   private val _cancelLabel = mutableStateOf<String?>(null)
   private val _titleText = mutableStateOf<String?>(null)
 
-  private val composeView = ComposeView(reactContext)
-
-  init {
-    composeView.setContent {
-      DateRangePickerContent()
-    }
-    super.addView(composeView, LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.MATCH_PARENT))
-  }
+  private var composeView: ComposeView? = null
 
   // Property setters called by ViewManager
-  fun setVisible(value: Boolean) {
-    _visible.value = value
-  }
-
   fun setIsInline(value: Boolean) {
     _isInline.value = value
   }
@@ -116,83 +106,36 @@ internal class DateRangePickerView(private val reactContext: ThemedReactContext)
     _titleText.value = value
   }
 
-  override fun onDetachedFromWindow() {
-    super.onDetachedFromWindow()
-    _visible.value = false
-  }
+  override fun createDialog(): Dialog {
+    val activity = reactContext.currentActivity ?: throw IllegalStateException("No activity")
 
-  // Event dispatchers
-  private fun dispatchConfirmEvent(startDateMillis: Long?, endDateMillis: Long?) {
-    UiThreadUtil.runOnUiThread {
-      if (!reactContext.hasActiveReactInstance()) {
-        Log.w(TAG, "Cannot dispatch confirm event: React instance is not active")
-        return@runOnUiThread
-      }
-      if (id == View.NO_ID) {
-        Log.w(TAG, "Cannot dispatch confirm event: View has no ID")
-        return@runOnUiThread
-      }
-      try {
-        val event: WritableMap = Arguments.createMap()
-        event.putDouble("startDateMillis", startDateMillis?.toDouble() ?: 0.0)
-        event.putDouble("endDateMillis", endDateMillis?.toDouble() ?: 0.0)
-        reactContext
-          .getJSModule(RCTEventEmitter::class.java)
-          ?.receiveEvent(id, "topConfirm", event)
-      } catch (e: Exception) {
-        Log.w(TAG, "Failed to dispatch confirm event", e)
+    composeView = ComposeView(activity).apply {
+      setContent {
+        DateRangePickerDialogContent()
       }
     }
-  }
 
-  private fun dispatchCancelEvent() {
-    UiThreadUtil.runOnUiThread {
-      if (!reactContext.hasActiveReactInstance()) {
-        Log.w(TAG, "Cannot dispatch cancel event: React instance is not active")
-        return@runOnUiThread
+    return ComponentDialog(activity).apply {
+      requestWindowFeature(Window.FEATURE_NO_TITLE)
+      setContentView(composeView!!, ViewGroup.LayoutParams(
+        ViewGroup.LayoutParams.MATCH_PARENT,
+        ViewGroup.LayoutParams.MATCH_PARENT
+      ))
+      window?.apply {
+        setBackgroundDrawable(ColorDrawable(Color.TRANSPARENT))
+        setLayout(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT)
       }
-      if (id == View.NO_ID) {
-        Log.w(TAG, "Cannot dispatch cancel event: View has no ID")
-        return@runOnUiThread
-      }
-      try {
-        val event: WritableMap = Arguments.createMap()
-        reactContext
-          .getJSModule(RCTEventEmitter::class.java)
-          ?.receiveEvent(id, "topCancel", event)
-      } catch (e: Exception) {
-        Log.w(TAG, "Failed to dispatch cancel event", e)
-      }
-    }
-  }
-
-  private fun dispatchChangeEvent(startDateMillis: Long?, endDateMillis: Long?) {
-    UiThreadUtil.runOnUiThread {
-      if (!reactContext.hasActiveReactInstance()) {
-        Log.w(TAG, "Cannot dispatch change event: React instance is not active")
-        return@runOnUiThread
-      }
-      if (id == View.NO_ID) {
-        Log.w(TAG, "Cannot dispatch change event: View has no ID")
-        return@runOnUiThread
-      }
-      try {
-        val event: WritableMap = Arguments.createMap()
-        event.putDouble("startDateMillis", startDateMillis?.toDouble() ?: 0.0)
-        event.putDouble("endDateMillis", endDateMillis?.toDouble() ?: 0.0)
-        reactContext
-          .getJSModule(RCTEventEmitter::class.java)
-          ?.receiveEvent(id, "topDateChange", event)
-      } catch (e: Exception) {
-        Log.w(TAG, "Failed to dispatch change event", e)
+      setOnDismissListener {
+        if (isVisible) {
+          markDismissed()
+          dispatchEvent("topCancel")
+        }
       }
     }
   }
 
   @Composable
-  private fun DateRangePickerContent() {
-    val isVisible = _visible.value
-    val isInline = _isInline.value
+  private fun DateRangePickerDialogContent() {
     val showModeToggle = _showModeToggle.value
 
     // Build year range
@@ -241,61 +184,60 @@ internal class DateRangePickerView(private val reactContext: ThemedReactContext)
       dateRangePickerState.selectedStartDateMillis,
       dateRangePickerState.selectedEndDateMillis
     ) {
-      dispatchChangeEvent(
-        dateRangePickerState.selectedStartDateMillis,
-        dateRangePickerState.selectedEndDateMillis
-      )
+      dispatchEvent("topDateChange", mapOf(
+        "startDateMillis" to dateRangePickerState.selectedStartDateMillis,
+        "endDateMillis" to dateRangePickerState.selectedEndDateMillis
+      ))
     }
 
-    if (isInline) {
-      // Inline/embedded DateRangePicker
-      if (isVisible) {
-        DateRangePicker(
-          state = dateRangePickerState,
-          modifier = Modifier.fillMaxSize(),
-          showModeToggle = showModeToggle,
-          title = _titleText.value?.let { { Text(it, modifier = Modifier.padding(start = 16.dp, top = 16.dp)) } }
-        )
-      }
+    if (_isInline.value) {
+      // Inline/embedded DateRangePicker (no dialog chrome)
+      DateRangePicker(
+        state = dateRangePickerState,
+        modifier = Modifier.fillMaxSize(),
+        showModeToggle = showModeToggle,
+        title = _titleText.value?.let { { Text(it, modifier = Modifier.padding(start = 16.dp, top = 16.dp)) } }
+      )
     } else {
       // Modal DatePickerDialog with DateRangePicker
-      if (isVisible) {
-        DatePickerDialog(
-          onDismissRequest = {
-            _visible.value = false
-            dispatchCancelEvent()
-          },
-          confirmButton = {
-            TextButton(
-              onClick = {
-                _visible.value = false
-                dispatchConfirmEvent(
-                  dateRangePickerState.selectedStartDateMillis,
-                  dateRangePickerState.selectedEndDateMillis
-                )
-              }
-            ) {
-              Text(_confirmLabel.value ?: "OK")
+      DatePickerDialog(
+        onDismissRequest = {
+          markDismissed()
+          dispatchEvent("topCancel")
+          dialog?.dismiss()
+        },
+        confirmButton = {
+          TextButton(
+            onClick = {
+              markDismissed()
+              dispatchEvent("topConfirm", mapOf(
+                "startDateMillis" to dateRangePickerState.selectedStartDateMillis,
+                "endDateMillis" to dateRangePickerState.selectedEndDateMillis
+              ))
+              dialog?.dismiss()
             }
-          },
-          dismissButton = {
-            TextButton(
-              onClick = {
-                _visible.value = false
-                dispatchCancelEvent()
-              }
-            ) {
-              Text(_cancelLabel.value ?: "Cancel")
-            }
+          ) {
+            Text(_confirmLabel.value ?: "OK")
           }
-        ) {
-          DateRangePicker(
-            state = dateRangePickerState,
-            showModeToggle = showModeToggle,
-            title = _titleText.value?.let { { Text(it, modifier = Modifier.padding(start = 16.dp, top = 16.dp)) } },
-            modifier = Modifier.weight(1f)
-          )
+        },
+        dismissButton = {
+          TextButton(
+            onClick = {
+              markDismissed()
+              dispatchEvent("topCancel")
+              dialog?.dismiss()
+            }
+          ) {
+            Text(_cancelLabel.value ?: "Cancel")
+          }
         }
+      ) {
+        DateRangePicker(
+          state = dateRangePickerState,
+          showModeToggle = showModeToggle,
+          title = _titleText.value?.let { { Text(it, modifier = Modifier.padding(start = 16.dp, top = 16.dp)) } },
+          modifier = Modifier.weight(1f)
+        )
       }
     }
   }

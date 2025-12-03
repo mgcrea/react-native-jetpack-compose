@@ -67,6 +67,9 @@ dependencies {
   implementation 'com.facebook.react:react-android'
   implementation "org.jetbrains.kotlin:kotlin-stdlib:${safeExtGet('kotlinVersion', '1.9.24')}"
 
+  // Material Components (for BottomSheetDialog)
+  implementation 'com.google.android.material:material:1.11.0'
+
   // Jetpack Compose dependencies
   def composeBom = platform('androidx.compose:compose-bom:2024.02.00')
   implementation composeBom

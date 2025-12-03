@@ -4,18 +4,22 @@ import android.annotation.SuppressLint
 import android.app.Dialog
 import android.util.Log
 import android.view.WindowManager
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Search
@@ -36,6 +40,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.AndroidUiDispatcher
 import androidx.compose.ui.platform.ComposeView
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.compositionContext
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.Lifecycle
@@ -201,11 +206,30 @@ internal class SheetPickerView(reactContext: ThemedReactContext) :
   }
 
   @Composable
+  private fun DragHandle() {
+    Box(
+      modifier = Modifier
+        .fillMaxWidth()
+        .padding(vertical = 12.dp),
+      contentAlignment = Alignment.Center
+    ) {
+      Box(
+        modifier = Modifier
+          .size(width = 32.dp, height = 4.dp)
+          .clip(RoundedCornerShape(2.dp))
+          .background(MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.4f))
+      )
+    }
+  }
+
+  @Composable
   private fun SheetPickerContent() {
     val options = _options.value
     val selectedValue = _selectedValue.value
     val title = _title.value
     val searchPlaceholder = _searchPlaceholder.value
+    val configuration = LocalConfiguration.current
+    val maxHeight = (configuration.screenHeightDp * 0.85f).dp
 
     val filteredOptions by remember(options, _searchText) {
       derivedStateOf {
@@ -222,56 +246,67 @@ internal class SheetPickerView(reactContext: ThemedReactContext) :
     }
 
     Surface(
-      modifier = Modifier.fillMaxWidth(),
+      modifier = Modifier
+        .fillMaxWidth()
+        .heightIn(max = maxHeight),
       color = MaterialTheme.colorScheme.surface
     ) {
       Column(
-        modifier = Modifier
-          .fillMaxWidth()
-          .padding(16.dp)
+        modifier = Modifier.fillMaxWidth()
       ) {
-        // Title
-        title?.let {
-          Text(
-            text = it,
-            style = MaterialTheme.typography.titleLarge,
-            modifier = Modifier.padding(bottom = 16.dp)
-          )
-        }
+        // Drag handle
+        DragHandle()
 
-        // Search field
-        OutlinedTextField(
-          value = _searchText,
-          onValueChange = { _searchText = it },
-          modifier = Modifier.fillMaxWidth(),
-          placeholder = { Text(searchPlaceholder) },
-          leadingIcon = {
-            Icon(
-              imageVector = Icons.Default.Search,
-              contentDescription = "Search",
-              tint = MaterialTheme.colorScheme.onSurfaceVariant
-            )
-          },
-          singleLine = true
-        )
-
-        Spacer(modifier = Modifier.height(8.dp))
-
-        // Options list
-        LazyColumn(
+        // Content with padding
+        Column(
           modifier = Modifier
             .fillMaxWidth()
-            .weight(1f, fill = false)
+            .padding(horizontal = 16.dp)
+            .padding(bottom = 16.dp)
         ) {
-          items(
-            items = filteredOptions,
-            key = { it.value }
-          ) { option ->
-            SheetPickerRow(
-              option = option,
-              isSelected = option.value == selectedValue,
-              onSelect = { handleSelect(option.value) }
+          // Title
+          title?.let {
+            Text(
+              text = it,
+              style = MaterialTheme.typography.titleLarge,
+              modifier = Modifier.padding(bottom = 16.dp)
             )
+          }
+
+          // Search field
+          OutlinedTextField(
+            value = _searchText,
+            onValueChange = { _searchText = it },
+            modifier = Modifier.fillMaxWidth(),
+            placeholder = { Text(searchPlaceholder) },
+            leadingIcon = {
+              Icon(
+                imageVector = Icons.Default.Search,
+                contentDescription = "Search",
+                tint = MaterialTheme.colorScheme.onSurfaceVariant
+              )
+            },
+            singleLine = true
+          )
+
+          Spacer(modifier = Modifier.height(8.dp))
+
+          // Options list
+          LazyColumn(
+            modifier = Modifier
+              .fillMaxWidth()
+              .weight(1f, fill = false)
+          ) {
+            items(
+              items = filteredOptions,
+              key = { it.value }
+            ) { option ->
+              SheetPickerRow(
+                option = option,
+                isSelected = option.value == selectedValue,
+                onSelect = { handleSelect(option.value) }
+              )
+            }
           }
         }
       }

@@ -24,6 +24,9 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.ComposeView
 import com.facebook.react.uimanager.ThemedReactContext
 import com.mgcrea.reactnative.jetpackcompose.core.DialogHostView
+import com.mgcrea.reactnative.jetpackcompose.events.CancelEvent
+import com.mgcrea.reactnative.jetpackcompose.events.ConfirmEvent
+import com.mgcrea.reactnative.jetpackcompose.events.DateChangeEvent
 
 @OptIn(ExperimentalMaterial3Api::class)
 @SuppressLint("ViewConstructor")
@@ -121,7 +124,7 @@ internal class DatePickerView(reactContext: ThemedReactContext) :
       setOnDismissListener {
         if (isVisible) {
           markDismissed()
-          dispatchEvent("topCancel")
+          dispatchEvent(CancelEvent(getSurfaceId(), id))
         }
       }
     }
@@ -173,9 +176,9 @@ internal class DatePickerView(reactContext: ThemedReactContext) :
 
     // Track selection changes
     LaunchedEffect(datePickerState.selectedDateMillis) {
-      dispatchEvent("topDateChange", mapOf(
-        "selectedDateMillis" to datePickerState.selectedDateMillis
-      ))
+      datePickerState.selectedDateMillis?.let { millis ->
+        dispatchEvent(DateChangeEvent(getSurfaceId(), id, millis))
+      }
     }
 
     if (_isInline.value) {
@@ -191,16 +194,16 @@ internal class DatePickerView(reactContext: ThemedReactContext) :
       DatePickerDialog(
         onDismissRequest = {
           markDismissed()
-          dispatchEvent("topCancel")
+          dispatchEvent(CancelEvent(getSurfaceId(), id))
           dialog?.dismiss()
         },
         confirmButton = {
           TextButton(
             onClick = {
               markDismissed()
-              dispatchEvent("topConfirm", mapOf(
-                "selectedDateMillis" to datePickerState.selectedDateMillis
-              ))
+              datePickerState.selectedDateMillis?.let { millis ->
+                dispatchEvent(ConfirmEvent(getSurfaceId(), id, millis))
+              }
               dialog?.dismiss()
             }
           ) {
@@ -211,7 +214,7 @@ internal class DatePickerView(reactContext: ThemedReactContext) :
           TextButton(
             onClick = {
               markDismissed()
-              dispatchEvent("topCancel")
+              dispatchEvent(CancelEvent(getSurfaceId(), id))
               dialog?.dismiss()
             }
           ) {

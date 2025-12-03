@@ -26,6 +26,9 @@ import androidx.compose.ui.platform.ComposeView
 import androidx.compose.ui.unit.dp
 import com.facebook.react.uimanager.ThemedReactContext
 import com.mgcrea.reactnative.jetpackcompose.core.DialogHostView
+import com.mgcrea.reactnative.jetpackcompose.events.CancelEvent
+import com.mgcrea.reactnative.jetpackcompose.events.DateRangeChangeEvent
+import com.mgcrea.reactnative.jetpackcompose.events.RangeConfirmEvent
 
 @OptIn(ExperimentalMaterial3Api::class)
 @SuppressLint("ViewConstructor")
@@ -128,7 +131,7 @@ internal class DateRangePickerView(reactContext: ThemedReactContext) :
       setOnDismissListener {
         if (isVisible) {
           markDismissed()
-          dispatchEvent("topCancel")
+          dispatchEvent(CancelEvent(getSurfaceId(), id))
         }
       }
     }
@@ -184,9 +187,11 @@ internal class DateRangePickerView(reactContext: ThemedReactContext) :
       dateRangePickerState.selectedStartDateMillis,
       dateRangePickerState.selectedEndDateMillis
     ) {
-      dispatchEvent("topDateChange", mapOf(
-        "startDateMillis" to dateRangePickerState.selectedStartDateMillis,
-        "endDateMillis" to dateRangePickerState.selectedEndDateMillis
+      dispatchEvent(DateRangeChangeEvent(
+        getSurfaceId(),
+        id,
+        dateRangePickerState.selectedStartDateMillis,
+        dateRangePickerState.selectedEndDateMillis
       ))
     }
 
@@ -203,17 +208,16 @@ internal class DateRangePickerView(reactContext: ThemedReactContext) :
       DatePickerDialog(
         onDismissRequest = {
           markDismissed()
-          dispatchEvent("topCancel")
+          dispatchEvent(CancelEvent(getSurfaceId(), id))
           dialog?.dismiss()
         },
         confirmButton = {
           TextButton(
             onClick = {
               markDismissed()
-              dispatchEvent("topConfirm", mapOf(
-                "startDateMillis" to dateRangePickerState.selectedStartDateMillis,
-                "endDateMillis" to dateRangePickerState.selectedEndDateMillis
-              ))
+              val startMillis = dateRangePickerState.selectedStartDateMillis ?: 0L
+              val endMillis = dateRangePickerState.selectedEndDateMillis ?: 0L
+              dispatchEvent(RangeConfirmEvent(getSurfaceId(), id, startMillis, endMillis))
               dialog?.dismiss()
             }
           ) {
@@ -224,7 +228,7 @@ internal class DateRangePickerView(reactContext: ThemedReactContext) :
           TextButton(
             onClick = {
               markDismissed()
-              dispatchEvent("topCancel")
+              dispatchEvent(CancelEvent(getSurfaceId(), id))
               dialog?.dismiss()
             }
           ) {

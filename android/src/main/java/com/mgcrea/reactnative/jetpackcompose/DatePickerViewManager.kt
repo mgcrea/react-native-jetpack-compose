@@ -1,8 +1,8 @@
 package com.mgcrea.reactnative.jetpackcompose
 
-import com.facebook.react.common.MapBuilder
 import com.facebook.react.uimanager.SimpleViewManager
 import com.facebook.react.uimanager.ThemedReactContext
+import com.facebook.react.uimanager.UIManagerHelper
 import com.facebook.react.uimanager.ViewManagerDelegate
 import com.facebook.react.viewmanagers.DatePickerViewManagerDelegate
 import com.facebook.react.viewmanagers.DatePickerViewManagerInterface
@@ -20,6 +20,10 @@ internal class DatePickerViewManager :
     DatePickerView(context)
 
   override fun getDelegate(): ViewManagerDelegate<DatePickerView> = delegate
+
+  override fun addEventEmitters(reactContext: ThemedReactContext, view: DatePickerView) {
+    view.eventDispatcher = UIManagerHelper.getEventDispatcherForReactTag(reactContext, view.id)
+  }
 
   override fun setVisible(view: DatePickerView, value: Boolean) {
     view.setVisible(value)
@@ -71,14 +75,6 @@ internal class DatePickerViewManager :
 
   override fun setTitleText(view: DatePickerView, value: String?) {
     view.setTitleText(value)
-  }
-
-  override fun getExportedCustomDirectEventTypeConstants(): Map<String, Any> {
-    return MapBuilder.builder<String, Any>()
-      .put("topConfirm", MapBuilder.of("registrationName", "onConfirm"))
-      .put("topCancel", MapBuilder.of("registrationName", "onCancel"))
-      .put("topDateChange", MapBuilder.of("registrationName", "onDateChange"))
-      .build()
   }
 
   companion object {

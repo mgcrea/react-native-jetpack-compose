@@ -2,11 +2,11 @@ package com.mgcrea.reactnative.jetpackcompose.core
 
 import android.app.Dialog
 import android.util.Log
-import android.view.View
-import com.facebook.react.bridge.Arguments
 import com.facebook.react.bridge.UiThreadUtil
 import com.facebook.react.uimanager.ThemedReactContext
-import com.facebook.react.uimanager.events.RCTEventEmitter
+import com.facebook.react.uimanager.UIManagerHelper
+import com.facebook.react.uimanager.events.Event
+import com.facebook.react.uimanager.events.EventDispatcher
 import com.facebook.react.views.view.ReactViewGroup
 
 /**
@@ -29,6 +29,9 @@ abstract class DialogHostView(
   protected var dialog: Dialog? = null
   protected var isVisible = false
     private set
+
+  /** Event dispatcher for Fabric events, set by ViewManager */
+  var eventDispatcher: EventDispatcher? = null
 
   init {
     visibility = GONE  // Never blocks touches
@@ -85,40 +88,18 @@ abstract class DialogHostView(
   }
 
   /**
-   * Dispatches an event to JavaScript via RCTEventEmitter.
+   * Dispatches an event to JavaScript using the Fabric event system.
    *
-   * @param eventName The native event name (e.g., "topDismiss", "topConfirm")
-   * @param params Optional map of event parameters
+   * @param event The event to dispatch
    */
-  protected fun dispatchEvent(eventName: String, params: Map<String, Any?> = emptyMap()) {
-    UiThreadUtil.runOnUiThread {
-      if (!reactContext.hasActiveReactInstance()) {
-        Log.w(tag, "Cannot dispatch $eventName: React instance not active")
-        return@runOnUiThread
-      }
-      if (id == View.NO_ID) {
-        Log.w(tag, "Cannot dispatch $eventName: View has no ID")
-        return@runOnUiThread
-      }
-      try {
-        val event = Arguments.createMap()
-        params.forEach { (key, value) ->
-          when (value) {
-            is Double -> event.putDouble(key, value)
-            is Int -> event.putInt(key, value)
-            is String -> event.putString(key, value)
-            is Boolean -> event.putBoolean(key, value)
-            is Long -> event.putDouble(key, value.toDouble())
-            null -> event.putNull(key)
-          }
-        }
-        reactContext.getJSModule(RCTEventEmitter::class.java)
-          ?.receiveEvent(id, eventName, event)
-      } catch (e: Exception) {
-        Log.w(tag, "Failed to dispatch $eventName", e)
-      }
-    }
+  protected fun dispatchEvent(event: Event<*>) {
+    eventDispatcher?.dispatchEvent(event)
   }
+
+  /**
+   * Gets the surface ID for event dispatching.
+   */
+  protected fun getSurfaceId(): Int = UIManagerHelper.getSurfaceId(this)
 
   override fun onDetachedFromWindow() {
     super.onDetachedFromWindow()

@@ -1,7 +1,5 @@
 package com.mgcrea.reactnative.jetpackcompose.core
 
-import android.util.Log
-import android.view.View
 import android.view.View.MeasureSpec
 import android.widget.FrameLayout
 import androidx.compose.runtime.Composable
@@ -17,10 +15,10 @@ import androidx.savedstate.SavedStateRegistry
 import androidx.savedstate.SavedStateRegistryController
 import androidx.savedstate.SavedStateRegistryOwner
 import androidx.savedstate.setViewTreeSavedStateRegistryOwner
-import com.facebook.react.bridge.Arguments
-import com.facebook.react.bridge.UiThreadUtil
 import com.facebook.react.uimanager.ThemedReactContext
-import com.facebook.react.uimanager.events.RCTEventEmitter
+import com.facebook.react.uimanager.UIManagerHelper
+import com.facebook.react.uimanager.events.Event
+import com.facebook.react.uimanager.events.EventDispatcher
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.launch
@@ -49,6 +47,9 @@ abstract class InlineComposeView(
   override val savedStateRegistry: SavedStateRegistry get() = savedStateRegistryController.savedStateRegistry
 
   private var recomposerScope: CoroutineScope? = null
+
+  /** Event dispatcher for Fabric events, set by ViewManager */
+  var eventDispatcher: EventDispatcher? = null
 
   /**
    * The Composable content to render.
@@ -122,38 +123,16 @@ abstract class InlineComposeView(
   }
 
   /**
-   * Dispatches an event to JavaScript via RCTEventEmitter.
+   * Dispatches an event to JavaScript using the Fabric event system.
    *
-   * @param eventName The native event name (e.g., "topValueChange")
-   * @param params Optional map of event parameters
+   * @param event The event to dispatch
    */
-  protected fun dispatchEvent(eventName: String, params: Map<String, Any?> = emptyMap()) {
-    UiThreadUtil.runOnUiThread {
-      if (!reactContext.hasActiveReactInstance()) {
-        Log.w(tag, "Cannot dispatch $eventName: React instance not active")
-        return@runOnUiThread
-      }
-      if (id == View.NO_ID) {
-        Log.w(tag, "Cannot dispatch $eventName: View has no ID")
-        return@runOnUiThread
-      }
-      try {
-        val event = Arguments.createMap()
-        params.forEach { (key, value) ->
-          when (value) {
-            is Double -> event.putDouble(key, value)
-            is Int -> event.putInt(key, value)
-            is String -> event.putString(key, value)
-            is Boolean -> event.putBoolean(key, value)
-            is Long -> event.putDouble(key, value.toDouble())
-            null -> event.putNull(key)
-          }
-        }
-        reactContext.getJSModule(RCTEventEmitter::class.java)
-          ?.receiveEvent(id, eventName, event)
-      } catch (e: Exception) {
-        Log.w(tag, "Failed to dispatch $eventName", e)
-      }
-    }
+  protected fun dispatchEvent(event: Event<*>) {
+    eventDispatcher?.dispatchEvent(event)
   }
+
+  /**
+   * Gets the surface ID for event dispatching.
+   */
+  protected fun getSurfaceId(): Int = UIManagerHelper.getSurfaceId(this)
 }

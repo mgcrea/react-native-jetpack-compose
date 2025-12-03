@@ -110,6 +110,8 @@ abstract class InlineComposeView(
   }
 
   override fun onDetachedFromWindow() {
+    // Clear event dispatcher first to prevent events during cleanup
+    eventDispatcher = null
     lifecycleRegistry.handleLifecycleEvent(Lifecycle.Event.ON_PAUSE)
     lifecycleRegistry.handleLifecycleEvent(Lifecycle.Event.ON_STOP)
     lifecycleRegistry.handleLifecycleEvent(Lifecycle.Event.ON_DESTROY)

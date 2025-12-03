@@ -103,6 +103,10 @@ abstract class DialogHostView(
 
   override fun onDetachedFromWindow() {
     super.onDetachedFromWindow()
+    // Clear event dispatcher first to prevent events during cleanup
+    eventDispatcher = null
+    // Mark as not visible to prevent dismiss events
+    isVisible = false
     dialog?.dismiss()
     dialog = null
   }

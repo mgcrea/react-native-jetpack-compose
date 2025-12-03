@@ -1,4 +1,3 @@
-export { ColorView } from "./native/ColorView";
 export { ModalBottomSheet } from "./native/ModalBottomSheet";
 export { DatePicker } from "./native/DatePicker";
 export { DatePickerModal } from "./native/DatePickerModal";

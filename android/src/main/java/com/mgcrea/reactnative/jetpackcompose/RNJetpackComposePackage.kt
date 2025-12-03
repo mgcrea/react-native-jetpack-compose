@@ -12,7 +12,6 @@ class RNJetpackComposePackage : ReactPackage {
   override fun createViewManagers(
     reactContext: ReactApplicationContext,
   ): List<ViewManager<*, *>> = listOf(
-    ColorViewManager(),
     ModalBottomSheetManager(),
     DatePickerViewManager(),
     DateRangePickerViewManager(),

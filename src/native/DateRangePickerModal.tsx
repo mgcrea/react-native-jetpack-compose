@@ -1,6 +1,5 @@
 import React, { FunctionComponent, useCallback, useMemo } from "react";
 import type { NativeSyntheticEvent, StyleProp, ViewStyle } from "react-native";
-import { StyleSheet } from "react-native";
 
 import DateRangePickerNativeComponent, {
   type RangeCancelEvent,
@@ -159,11 +158,6 @@ export const DateRangePickerModal: FunctionComponent<DateRangePickerModalProps> 
     [onChange],
   );
 
-  // Don't render the native view when not visible to avoid blocking touches
-  if (!visible) {
-    return null;
-  }
-
   return (
     <DateRangePickerNativeComponent
       {...props}
@@ -184,17 +178,7 @@ export const DateRangePickerModal: FunctionComponent<DateRangePickerModalProps> 
       onConfirm={handleConfirm}
       onCancel={handleCancel}
       onDateChange={handleDateChange}
-      style={[styles.base, style]}
+      style={style}
     />
   );
 };
-
-const styles = StyleSheet.create({
-  base: {
-    position: "absolute",
-    top: 0,
-    left: 0,
-    right: 0,
-    bottom: 0,
-  },
-});

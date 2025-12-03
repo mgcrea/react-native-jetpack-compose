@@ -1,6 +1,5 @@
 import React, { FunctionComponent, useCallback } from "react";
 import type { NativeSyntheticEvent, StyleProp, ViewStyle } from "react-native";
-import { StyleSheet } from "react-native";
 
 import ModalBottomSheetNativeComponent, {
   type DismissEvent,
@@ -45,29 +44,14 @@ export const ModalBottomSheet: FunctionComponent<ModalBottomSheetProps> = ({
     [onDismiss],
   );
 
-  // Don't render the native view when not visible to avoid blocking touches
-  if (!visible) {
-    return null;
-  }
-
   return (
     <ModalBottomSheetNativeComponent
       {...props}
       visible={visible}
       onDismiss={handleDismiss}
-      style={[styles.base, style]}
+      style={style}
     >
       {children}
     </ModalBottomSheetNativeComponent>
   );
 };
-
-const styles = StyleSheet.create({
-  base: {
-    position: "absolute",
-    top: 0,
-    left: 0,
-    right: 0,
-    bottom: 0,
-  },
-});

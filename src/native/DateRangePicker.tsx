@@ -1,5 +1,5 @@
 import React, { FunctionComponent, useCallback, useMemo } from "react";
-import type { NativeSyntheticEvent, StyleProp, ViewStyle } from "react-native";
+import { StyleSheet, type NativeSyntheticEvent, type StyleProp, type ViewStyle } from "react-native";
 
 import DateRangePickerNativeComponent, {
   type NativeDateRangePickerProps,
@@ -187,7 +187,13 @@ export const DateRangePicker: FunctionComponent<DateRangePickerProps> = ({
       onConfirm={handleConfirm}
       onCancel={handleCancel}
       onDateChange={handleDateChange}
-      style={style}
+      style={[styles.base, style]}
     />
   );
 };
+
+const styles = StyleSheet.create({
+  base: {
+    minHeight: 64,
+  },
+});

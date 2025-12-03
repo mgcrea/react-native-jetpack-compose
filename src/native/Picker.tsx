@@ -1,6 +1,5 @@
 import React, { FunctionComponent, useCallback, useMemo } from "react";
-import type { NativeSyntheticEvent, StyleProp, ViewStyle } from "react-native";
-import { StyleSheet } from "react-native";
+import { StyleSheet, type NativeSyntheticEvent, type StyleProp, type ViewStyle } from "react-native";
 
 import PickerNativeComponent, {
   type NativePickerProps,

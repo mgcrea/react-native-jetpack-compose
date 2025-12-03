@@ -1,206 +1,175 @@
 package com.mgcrea.reactnative.jetpackcompose
 
-import android.util.Log
+import android.annotation.SuppressLint
+import android.app.Dialog
+import android.view.MotionEvent
 import android.view.View
 import android.view.ViewGroup
-import android.view.ViewGroup.MarginLayoutParams
-import android.widget.FrameLayout
-import com.facebook.react.bridge.Arguments
-import com.facebook.react.bridge.UiThreadUtil
+import com.facebook.react.uimanager.JSPointerDispatcher
+import com.facebook.react.uimanager.JSTouchDispatcher
+import com.facebook.react.uimanager.RootView
 import com.facebook.react.uimanager.ThemedReactContext
-import com.facebook.react.uimanager.events.RCTEventEmitter
+import com.facebook.react.uimanager.events.EventDispatcher
 import com.facebook.react.views.view.ReactViewGroup
 import com.google.android.material.bottomsheet.BottomSheetBehavior
 import com.google.android.material.bottomsheet.BottomSheetDialog
+import com.mgcrea.reactnative.jetpackcompose.core.DialogHostView
 
 /**
- * Custom ReactViewGroup that ensures all children have FrameLayout.LayoutParams.
- * This prevents ClassCastException when used inside BottomSheetDialog's CoordinatorLayout/FrameLayout hierarchy.
+ * Controller view that manages the bottom sheet content and implements RootView
+ * for proper touch event handling. This view is set as the dialog's content view.
  *
- * Note: FrameLayout.LayoutParams extends MarginLayoutParams, so this satisfies both requirements.
+ * Pattern from react-native-true-sheet: ReactViewGroup that implements RootView
+ * and is used directly as the dialog's content view.
  */
-private class SafeReactViewGroup(context: ThemedReactContext) : ReactViewGroup(context) {
+@SuppressLint("ViewConstructor")
+private class ModalBottomSheetController(
+  private val reactContext: ThemedReactContext,
+  private val onContentSizeChanged: (width: Int, height: Int) -> Unit
+) :
+  ReactViewGroup(reactContext),
+  RootView {
 
-  override fun addView(child: View, index: Int, params: ViewGroup.LayoutParams?) {
-    // Ensure the child has FrameLayout.LayoutParams
-    val safeParams = when (params) {
-      is FrameLayout.LayoutParams -> params
-      is MarginLayoutParams -> FrameLayout.LayoutParams(params)
-      null -> FrameLayout.LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.WRAP_CONTENT)
-      else -> FrameLayout.LayoutParams(params)
+  internal var eventDispatcher: EventDispatcher? = null
+  private val jsTouchDispatcher = JSTouchDispatcher(this)
+  private var jsPointerDispatcher: JSPointerDispatcher? = null
+
+  private var lastWidth = 0
+  private var lastHeight = 0
+
+  init {
+    jsPointerDispatcher = JSPointerDispatcher(this)
+  }
+
+  override fun onSizeChanged(w: Int, h: Int, oldw: Int, oldh: Int) {
+    super.onSizeChanged(w, h, oldw, oldh)
+    if (w != lastWidth || h != lastHeight) {
+      lastWidth = w
+      lastHeight = h
+      onContentSizeChanged(w, h)
     }
-    super.addView(child, index, safeParams)
   }
 
-  override fun checkLayoutParams(p: ViewGroup.LayoutParams?): Boolean {
-    return p is FrameLayout.LayoutParams
+  // RootView implementation
+  override fun handleException(t: Throwable) {
+    reactContext.reactApplicationContext.handleException(RuntimeException(t))
   }
 
-  override fun generateLayoutParams(lp: ViewGroup.LayoutParams?): FrameLayout.LayoutParams {
-    return when (lp) {
-      is FrameLayout.LayoutParams -> lp
-      is MarginLayoutParams -> FrameLayout.LayoutParams(lp)
-      null -> FrameLayout.LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.WRAP_CONTENT)
-      else -> FrameLayout.LayoutParams(lp)
+  override fun onInterceptTouchEvent(event: MotionEvent): Boolean {
+    eventDispatcher?.let {
+      jsTouchDispatcher.handleTouchEvent(event, it, reactContext)
+      jsPointerDispatcher?.handleMotionEvent(event, it, true)
+    }
+    return super.onInterceptTouchEvent(event)
+  }
+
+  override fun onTouchEvent(event: MotionEvent): Boolean {
+    eventDispatcher?.let {
+      jsTouchDispatcher.handleTouchEvent(event, it, reactContext)
+      jsPointerDispatcher?.handleMotionEvent(event, it, false)
+    }
+    super.onTouchEvent(event)
+    return true
+  }
+
+  override fun onChildStartedNativeGesture(childView: View?, ev: MotionEvent) {
+    eventDispatcher?.let {
+      jsTouchDispatcher.onChildStartedNativeGesture(ev, it)
+      jsPointerDispatcher?.onChildStartedNativeGesture(childView, ev, it)
     }
   }
 
-  override fun generateDefaultLayoutParams(): LayoutParams {
-    return FrameLayout.LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.WRAP_CONTENT)
+  override fun onChildEndedNativeGesture(childView: View, ev: MotionEvent) {
+    eventDispatcher?.let { jsTouchDispatcher.onChildEndedNativeGesture(ev, it) }
+    jsPointerDispatcher?.onChildEndedNativeGesture()
   }
 }
 
 /**
- * Alternative ModalBottomSheet implementation using Android's BottomSheetDialog
- * instead of Jetpack Compose's ModalBottomSheet.
+ * ModalBottomSheet implementation using Android's BottomSheetDialog.
  *
- * This avoids the LayoutParams casting issues that occur when embedding
- * React Native views inside Compose's AndroidView.
+ * Architecture (following react-native-true-sheet pattern):
+ * - This view extends DialogHostView (host stays hidden with visibility=GONE)
+ * - Children are delegated to the controller
+ * - The controller (ModalBottomSheetController) extends ReactViewGroup and implements RootView
+ * - The controller is set as the dialog's content view
+ * - This avoids LayoutParams casting issues because React Native views stay in a ReactViewGroup hierarchy
  */
-internal class ModalBottomSheetViewDialog(private val reactContext: ThemedReactContext) :
-  FrameLayout(reactContext) {
+@SuppressLint("ViewConstructor")
+internal class ModalBottomSheetViewDialog(reactContext: ThemedReactContext) :
+  DialogHostView(reactContext, TAG) {
 
   companion object {
-    private const val TAG = "ModalBottomSheetDialog"
+    private const val TAG = "ModalBottomSheet"
   }
 
-  private val contentContainer = SafeReactViewGroup(reactContext)
-  private var bottomSheetDialog: BottomSheetDialog? = null
-  private var isVisible = false
-
-  init {
-    // Keep contentContainer as a child when dialog is not shown
-    super.addView(
-      contentContainer,
-      FrameLayout.LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.WRAP_CONTENT)
-    )
+  // Controller that will be used as the dialog's content view
+  private val controller = ModalBottomSheetController(reactContext) { _, height ->
+    onContentHeightChanged(height)
   }
+  private var contentHeight = 0
 
-  fun setVisible(value: Boolean) {
-    if (value == isVisible) return
-    isVisible = value
-
-    UiThreadUtil.runOnUiThread {
-      if (value) {
-        showBottomSheet()
-      } else {
-        hideBottomSheet()
+  private fun onContentHeightChanged(height: Int) {
+    contentHeight = height
+    // Update peekHeight if dialog is showing
+    (dialog as? BottomSheetDialog)?.behavior?.let { behavior ->
+      if (height > 0) {
+        behavior.peekHeight = height
       }
     }
   }
 
-  private fun showBottomSheet() {
-    val activity = reactContext.currentActivity ?: run {
-      Log.w(TAG, "Cannot show bottom sheet: no current activity")
-      return
-    }
-
-    val dialog = bottomSheetDialog ?: createDialog()
-
-    // Reparent contentContainer to dialog
-    (contentContainer.parent as? ViewGroup)?.removeView(contentContainer)
-
-    // Ensure contentContainer has proper LayoutParams for the dialog
-    contentContainer.layoutParams = FrameLayout.LayoutParams(
-      LayoutParams.MATCH_PARENT,
-      LayoutParams.WRAP_CONTENT
-    )
-
-    dialog.setContentView(contentContainer)
-
-    dialog.show()
-
-    // Configure behavior after show
-    dialog.behavior.apply {
-      state = BottomSheetBehavior.STATE_EXPANDED
-      skipCollapsed = true
-    }
-  }
-
-  private fun hideBottomSheet() {
-    bottomSheetDialog?.dismiss()
-  }
-
-  private fun createDialog(): BottomSheetDialog {
+  override fun createDialog(): Dialog {
     val activity = reactContext.currentActivity ?: throw IllegalStateException("No activity")
 
     return BottomSheetDialog(activity).apply {
       setOnDismissListener {
-        // Reparent contentContainer back to this view
-        (contentContainer.parent as? ViewGroup)?.removeView(contentContainer)
-        this@ModalBottomSheetViewDialog.addView(contentContainer)
-
         if (isVisible) {
-          isVisible = false
-          dispatchDismissEvent()
+          markDismissed()
+          dispatchEvent("topDismiss")
         }
       }
-      bottomSheetDialog = this
-    }
-  }
-
-  private fun dispatchDismissEvent() {
-    UiThreadUtil.runOnUiThread {
-      if (!reactContext.hasActiveReactInstance()) {
-        Log.w(TAG, "Cannot dispatch dismiss event: React instance is not active")
-        return@runOnUiThread
-      }
-      if (id == View.NO_ID) {
-        Log.w(TAG, "Cannot dispatch dismiss event: View has no ID")
-        return@runOnUiThread
-      }
-      try {
-        val event = Arguments.createMap()
-        reactContext
-          .getJSModule(RCTEventEmitter::class.java)
-          ?.receiveEvent(id, "topDismiss", event)
-      } catch (e: Exception) {
-        Log.w(TAG, "Failed to dispatch dismiss event", e)
+      behavior.apply {
+        isFitToContents = true
+        skipCollapsed = true
       }
     }
   }
 
-  override fun onDetachedFromWindow() {
-    super.onDetachedFromWindow()
-    bottomSheetDialog?.dismiss()
-    bottomSheetDialog = null
-  }
-
-  // Route child operations to contentContainer
-  override fun addView(child: View, index: Int, params: ViewGroup.LayoutParams?) {
-    if (child === contentContainer) {
-      super.addView(child, index, params)
-    } else {
-      val safeIndex = if (index < 0 || index > contentContainer.childCount) {
-        contentContainer.childCount
-      } else {
-        index
+  override fun onDialogShow() {
+    (dialog as? BottomSheetDialog)?.apply {
+      setContentView(controller)
+      behavior.apply {
+        if (contentHeight > 0) {
+          peekHeight = contentHeight
+        }
+        state = BottomSheetBehavior.STATE_EXPANDED
       }
-      contentContainer.addView(child, safeIndex, params)
     }
   }
 
-  override fun addView(child: View, index: Int) {
-    addView(child, index, child.layoutParams)
+  // Route child operations to controller (following react-native-true-sheet pattern)
+  override fun addView(child: View?, index: Int) {
+    controller.addView(child, index)
   }
 
-  override fun removeView(view: View) {
-    if (view === contentContainer) {
-      super.removeView(view)
-    } else {
-      contentContainer.removeView(view)
-    }
+  override fun addView(child: View?, index: Int, params: ViewGroup.LayoutParams?) {
+    controller.addView(child, index, params)
+  }
+
+  override fun removeView(view: View?) {
+    controller.removeView(view)
   }
 
   override fun removeViewAt(index: Int) {
-    contentContainer.removeViewAt(index)
+    controller.removeViewAt(index)
   }
 
   override fun removeAllViews() {
-    contentContainer.removeAllViews()
+    controller.removeAllViews()
   }
 
-  override fun getChildCount(): Int = contentContainer.childCount
+  override fun getChildCount(): Int = controller.childCount
 
-  override fun getChildAt(index: Int): View = contentContainer.getChildAt(index)
+  override fun getChildAt(index: Int): View = controller.getChildAt(index)
 }

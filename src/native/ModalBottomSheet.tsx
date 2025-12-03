@@ -45,12 +45,7 @@ export const ModalBottomSheet: FunctionComponent<ModalBottomSheetProps> = ({
   );
 
   return (
-    <ModalBottomSheetNativeComponent
-      {...props}
-      visible={visible}
-      onDismiss={handleDismiss}
-      style={style}
-    >
+    <ModalBottomSheetNativeComponent {...props} visible={visible} onDismiss={handleDismiss} style={style}>
       {children}
     </ModalBottomSheetNativeComponent>
   );

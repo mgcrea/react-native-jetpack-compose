@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/consistent-type-definitions */
-import type { DirectEventHandler } from "react-native/Libraries/Types/CodegenTypes";
 import { codegenNativeComponent, type HostComponent, type ViewProps } from "react-native";
+import type { DirectEventHandler } from "react-native/Libraries/Types/CodegenTypes";
 
 /**
  * Event payload for the onValueChange event.
@@ -33,6 +33,4 @@ export interface NativePickerProps extends ViewProps {
  * Native Picker component created via React Native codegen.
  * @internal
  */
-export default codegenNativeComponent<NativePickerProps>(
-  "PickerView",
-) as HostComponent<NativePickerProps>;
+export default codegenNativeComponent<NativePickerProps>("PickerView") as HostComponent<NativePickerProps>;

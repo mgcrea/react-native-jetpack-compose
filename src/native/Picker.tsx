@@ -3,8 +3,8 @@ import type { NativeSyntheticEvent, StyleProp, ViewStyle } from "react-native";
 import { StyleSheet } from "react-native";
 
 import PickerNativeComponent, {
-  type PickerChangeEvent,
   type NativePickerProps,
+  type PickerChangeEvent,
 } from "./PickerNativeComponent";
 
 /**
@@ -20,10 +20,7 @@ export interface PickerItem {
 /**
  * Props for the Picker component.
  */
-export type PickerProps = Omit<
-  NativePickerProps,
-  "items" | "selectedValue" | "disabled" | "onValueChange"
-> & {
+export type PickerProps = Omit<NativePickerProps, "items" | "selectedValue" | "disabled" | "onValueChange"> & {
   /** Array of selectable items */
   items: PickerItem[];
   /** Currently selected value */

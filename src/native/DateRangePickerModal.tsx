@@ -2,10 +2,10 @@ import React, { FunctionComponent, useCallback, useMemo } from "react";
 import type { NativeSyntheticEvent, StyleProp, ViewStyle } from "react-native";
 
 import DateRangePickerNativeComponent, {
+  type NativeDateRangePickerProps,
   type RangeCancelEvent,
   type RangeConfirmEvent,
   type RangeDateChangeEvent,
-  type NativeDateRangePickerProps,
 } from "./DateRangePickerNativeComponent";
 
 /**

@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/consistent-type-definitions */
-import type { DirectEventHandler, Double } from "react-native/Libraries/Types/CodegenTypes";
 import { codegenNativeComponent, type HostComponent, type ViewProps } from "react-native";
+import type { DirectEventHandler, Double } from "react-native/Libraries/Types/CodegenTypes";
 
 /**
  * Event payload for the onConfirm event.

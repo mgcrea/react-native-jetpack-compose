@@ -3,9 +3,9 @@ import type { NativeSyntheticEvent, StyleProp, ViewStyle } from "react-native";
 import { StyleSheet } from "react-native";
 
 import DateRangePickerNativeComponent, {
+  type NativeDateRangePickerProps,
   type RangeConfirmEvent,
   type RangeDateChangeEvent,
-  type NativeDateRangePickerProps,
 } from "./DateRangePickerNativeComponent";
 
 /**

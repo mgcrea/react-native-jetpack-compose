@@ -2,9 +2,9 @@ import React, { FunctionComponent, useCallback, useMemo } from "react";
 import type { NativeSyntheticEvent, StyleProp, ViewStyle } from "react-native";
 
 import SheetPickerNativeComponent, {
-  type SheetPickerSelectEvent,
-  type SheetPickerDismissEvent,
   type NativeSheetPickerProps,
+  type SheetPickerDismissEvent,
+  type SheetPickerSelectEvent,
 } from "./SheetPickerNativeComponent";
 
 /**

@@ -12,16 +12,7 @@ plugins {
 }
 
 apply plugin: 'org.jetbrains.kotlin.plugin.compose'
-
-if (isNewArchitectureEnabled()) {
-  apply plugin: 'com.facebook.react'
-}
-
-if (isNewArchitectureEnabled()) {
-  react {
-    libraryName = "rnjetpackcomposespec"
-  }
-}
+apply plugin: 'com.facebook.react'
 
 android {
   namespace 'com.mgcrea.reactnative.jetpackcompose'
@@ -45,7 +36,7 @@ android {
 
   sourceSets {
     main {
-      java.srcDirs += ["${projectDir}/generated/java"]
+      java.srcDirs += ["${projectDir}/build/generated/source/codegen/java"]
     }
   }
 

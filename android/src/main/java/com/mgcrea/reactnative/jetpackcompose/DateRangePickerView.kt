@@ -1,46 +1,45 @@
 package com.mgcrea.reactnative.jetpackcompose
 
-import android.annotation.SuppressLint
-import android.app.Dialog
-import android.graphics.Color
-import android.graphics.drawable.ColorDrawable
-import android.view.ViewGroup
-import android.view.Window
-import androidx.activity.ComponentDialog
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.interaction.PressInteraction
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.DateRange
 import androidx.compose.material3.DatePickerDialog
 import androidx.compose.material3.DateRangePicker
 import androidx.compose.material3.DisplayMode
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Icon
+import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.SelectableDates
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.rememberDateRangePickerState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.ComposeView
-import androidx.compose.ui.unit.dp
 import com.facebook.react.uimanager.ThemedReactContext
-import com.mgcrea.reactnative.jetpackcompose.core.DialogHostView
+import com.mgcrea.reactnative.jetpackcompose.core.InlineComposeView
 import com.mgcrea.reactnative.jetpackcompose.events.CancelEvent
 import com.mgcrea.reactnative.jetpackcompose.events.DateRangeChangeEvent
 import com.mgcrea.reactnative.jetpackcompose.events.RangeConfirmEvent
+import java.text.SimpleDateFormat
+import java.util.Date
+import java.util.Locale
 
 @OptIn(ExperimentalMaterial3Api::class)
-@SuppressLint("ViewConstructor")
 internal class DateRangePickerView(reactContext: ThemedReactContext) :
-  DialogHostView(reactContext, TAG) {
+  InlineComposeView(reactContext, TAG) {
 
   companion object {
     private const val TAG = "DateRangePickerView"
   }
 
   // State backing for Compose
-  private val _isInline = mutableStateOf(false)
   private val _startDateMillis = mutableStateOf<Long?>(null)
   private val _endDateMillis = mutableStateOf<Long?>(null)
   private val _initialDisplayedMonthMillis = mutableStateOf<Long?>(null)
@@ -54,13 +53,26 @@ internal class DateRangePickerView(reactContext: ThemedReactContext) :
   private val _cancelLabel = mutableStateOf<String?>(null)
   private val _titleText = mutableStateOf<String?>(null)
 
-  private var composeView: ComposeView? = null
+  // New state for OutlinedTextField
+  private val _label = mutableStateOf<String?>(null)
+  private val _placeholder = mutableStateOf<String?>(null)
+  private val _disabled = mutableStateOf(false)
+  private var _showDialog by mutableStateOf(false)
 
-  // Property setters called by ViewManager
-  fun setIsInline(value: Boolean) {
-    _isInline.value = value
+  // Date formatting
+  private val dateFormat = SimpleDateFormat.getDateInstance(SimpleDateFormat.MEDIUM, Locale.getDefault())
+
+  private fun formatDateRange(startMillis: Long?, endMillis: Long?): String {
+    val startStr = startMillis?.let { dateFormat.format(Date(it)) }
+    val endStr = endMillis?.let { dateFormat.format(Date(it)) }
+    return when {
+      startStr != null && endStr != null -> "$startStr - $endStr"
+      startStr != null -> startStr
+      else -> ""
+    }
   }
 
+  // Property setters called by ViewManager
   fun setStartDateMillis(value: Double?) {
     _startDateMillis.value = value?.toLong()
   }
@@ -109,36 +121,23 @@ internal class DateRangePickerView(reactContext: ThemedReactContext) :
     _titleText.value = value
   }
 
-  override fun createDialog(): Dialog {
-    val activity = reactContext.currentActivity ?: throw IllegalStateException("No activity")
+  fun setLabel(value: String?) {
+    _label.value = value
+  }
 
-    composeView = ComposeView(activity).apply {
-      setContent {
-        DateRangePickerDialogContent()
-      }
-    }
+  fun setPlaceholder(value: String?) {
+    _placeholder.value = value
+  }
 
-    return ComponentDialog(activity).apply {
-      requestWindowFeature(Window.FEATURE_NO_TITLE)
-      setContentView(composeView!!, ViewGroup.LayoutParams(
-        ViewGroup.LayoutParams.MATCH_PARENT,
-        ViewGroup.LayoutParams.MATCH_PARENT
-      ))
-      window?.apply {
-        setBackgroundDrawable(ColorDrawable(Color.TRANSPARENT))
-        setLayout(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT)
-      }
-      setOnDismissListener {
-        if (isVisible) {
-          markDismissed()
-          dispatchEvent(CancelEvent(getSurfaceId(), id))
-        }
-      }
-    }
+  fun setDisabled(value: Boolean) {
+    _disabled.value = value
   }
 
   @Composable
-  private fun DateRangePickerDialogContent() {
+  override fun ComposeContent() {
+    val disabled = _disabled.value
+    val label = _label.value
+    val placeholder = _placeholder.value
     val showModeToggle = _showModeToggle.value
 
     // Build year range
@@ -195,30 +194,47 @@ internal class DateRangePickerView(reactContext: ThemedReactContext) :
       ))
     }
 
-    if (_isInline.value) {
-      // Inline/embedded DateRangePicker (no dialog chrome)
-      DateRangePicker(
-        state = dateRangePickerState,
-        modifier = Modifier.fillMaxSize(),
-        showModeToggle = showModeToggle,
-        title = _titleText.value?.let { { Text(it, modifier = Modifier.padding(start = 16.dp, top = 16.dp)) } }
-      )
-    } else {
-      // Modal DatePickerDialog with DateRangePicker
+    // Interaction source to detect clicks on the read-only text field
+    val interactionSource = remember { MutableInteractionSource() }
+
+    LaunchedEffect(interactionSource) {
+      interactionSource.interactions.collect { interaction ->
+        if (interaction is PressInteraction.Release && !disabled) {
+          _showDialog = true
+        }
+      }
+    }
+
+    // OutlinedTextField that shows selected date range
+    OutlinedTextField(
+      modifier = Modifier.fillMaxWidth(),
+      value = formatDateRange(_startDateMillis.value, _endDateMillis.value),
+      onValueChange = {},
+      readOnly = true,
+      singleLine = true,
+      enabled = !disabled,
+      label = label?.let { { Text(it) } },
+      placeholder = placeholder?.let { { Text(it, maxLines = 1) } },
+      trailingIcon = {
+        Icon(Icons.Default.DateRange, contentDescription = "Select date range")
+      },
+      interactionSource = interactionSource
+    )
+
+    // DatePickerDialog with DateRangePicker
+    if (_showDialog) {
       DatePickerDialog(
         onDismissRequest = {
-          markDismissed()
+          _showDialog = false
           dispatchEvent(CancelEvent(getSurfaceId(), id))
-          dialog?.dismiss()
         },
         confirmButton = {
           TextButton(
             onClick = {
-              markDismissed()
+              _showDialog = false
               val startMillis = dateRangePickerState.selectedStartDateMillis ?: 0L
               val endMillis = dateRangePickerState.selectedEndDateMillis ?: 0L
               dispatchEvent(RangeConfirmEvent(getSurfaceId(), id, startMillis, endMillis))
-              dialog?.dismiss()
             }
           ) {
             Text(_confirmLabel.value ?: "OK")
@@ -227,9 +243,8 @@ internal class DateRangePickerView(reactContext: ThemedReactContext) :
         dismissButton = {
           TextButton(
             onClick = {
-              markDismissed()
+              _showDialog = false
               dispatchEvent(CancelEvent(getSurfaceId(), id))
-              dialog?.dismiss()
             }
           ) {
             Text(_cancelLabel.value ?: "Cancel")
@@ -239,7 +254,7 @@ internal class DateRangePickerView(reactContext: ThemedReactContext) :
         DateRangePicker(
           state = dateRangePickerState,
           showModeToggle = showModeToggle,
-          title = _titleText.value?.let { { Text(it, modifier = Modifier.padding(start = 16.dp, top = 16.dp)) } },
+          title = _titleText.value?.let { { Text(it) } },
           modifier = Modifier.weight(1f)
         )
       }

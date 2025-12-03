@@ -25,14 +25,6 @@ internal class DateRangePickerViewManager :
     view.eventDispatcher = UIManagerHelper.getEventDispatcherForReactTag(reactContext, view.id)
   }
 
-  override fun setVisible(view: DateRangePickerView, value: Boolean) {
-    view.setVisible(value)
-  }
-
-  override fun setIsInline(view: DateRangePickerView, value: Boolean) {
-    view.setIsInline(value)
-  }
-
   override fun setStartDateMillis(view: DateRangePickerView, value: Double) {
     view.setStartDateMillis(value)
   }
@@ -79,6 +71,18 @@ internal class DateRangePickerViewManager :
 
   override fun setTitleText(view: DateRangePickerView, value: String?) {
     view.setTitleText(value)
+  }
+
+  override fun setLabel(view: DateRangePickerView, value: String?) {
+    view.setLabel(value)
+  }
+
+  override fun setPlaceholder(view: DateRangePickerView, value: String?) {
+    view.setPlaceholder(value)
+  }
+
+  override fun setDisabled(view: DateRangePickerView, value: Boolean) {
+    view.setDisabled(value)
   }
 
   companion object {

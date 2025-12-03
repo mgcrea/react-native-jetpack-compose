@@ -15,6 +15,7 @@ class RNJetpackComposePackage : ReactPackage {
     ColorViewManager(),
     ModalBottomSheetManager(),
     DatePickerViewManager(),
-    DateRangePickerViewManager()
+    DateRangePickerViewManager(),
+    SelectViewManager()
   )
 }

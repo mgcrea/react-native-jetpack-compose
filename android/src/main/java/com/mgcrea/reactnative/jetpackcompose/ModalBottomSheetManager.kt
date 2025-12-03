@@ -21,6 +21,11 @@ internal class ModalBottomSheetManager :
 
   override fun getDelegate(): ViewManagerDelegate<ModalBottomSheetViewDialog> = delegate
 
+  override fun onDropViewInstance(view: ModalBottomSheetViewDialog) {
+    super.onDropViewInstance(view)
+    view.onDropInstance()
+  }
+
   override fun addEventEmitters(reactContext: ThemedReactContext, view: ModalBottomSheetViewDialog) {
     view.eventDispatcher = UIManagerHelper.getEventDispatcherForReactTag(reactContext, view.id)
   }

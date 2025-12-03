@@ -23,6 +23,11 @@ internal class PickerViewManager :
 
   override fun getDelegate(): ViewManagerDelegate<PickerView> = delegate
 
+  override fun onDropViewInstance(view: PickerView) {
+    super.onDropViewInstance(view)
+    view.onDropInstance()
+  }
+
   override fun addEventEmitters(reactContext: ThemedReactContext, view: PickerView) {
     view.eventDispatcher = UIManagerHelper.getEventDispatcherForReactTag(reactContext, view.id)
   }

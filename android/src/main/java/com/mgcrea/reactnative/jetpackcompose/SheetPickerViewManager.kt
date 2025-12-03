@@ -23,12 +23,13 @@ internal class SheetPickerViewManager :
 
   override fun getDelegate(): ViewManagerDelegate<SheetPickerView> = delegate
 
-  override fun addEventEmitters(reactContext: ThemedReactContext, view: SheetPickerView) {
-    view.eventDispatcher = UIManagerHelper.getEventDispatcherForReactTag(reactContext, view.id)
+  override fun onDropViewInstance(view: SheetPickerView) {
+    super.onDropViewInstance(view)
+    view.onDropInstance()
   }
 
-  override fun setVisible(view: SheetPickerView, value: Boolean) {
-    view.setVisible(value)
+  override fun addEventEmitters(reactContext: ThemedReactContext, view: SheetPickerView) {
+    view.eventDispatcher = UIManagerHelper.getEventDispatcherForReactTag(reactContext, view.id)
   }
 
   override fun setOptions(view: SheetPickerView, value: String?) {
@@ -49,6 +50,18 @@ internal class SheetPickerViewManager :
 
   override fun setAutoDismiss(view: SheetPickerView, value: Boolean) {
     view.setAutoDismiss(value)
+  }
+
+  override fun setLabel(view: SheetPickerView, value: String?) {
+    view.setLabel(value)
+  }
+
+  override fun setPlaceholder(view: SheetPickerView, value: String?) {
+    view.setPlaceholder(value)
+  }
+
+  override fun setDisabled(view: SheetPickerView, value: Boolean) {
+    view.setDisabled(value)
   }
 
   companion object {

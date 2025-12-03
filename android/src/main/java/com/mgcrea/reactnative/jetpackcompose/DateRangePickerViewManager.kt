@@ -21,6 +21,11 @@ internal class DateRangePickerViewManager :
 
   override fun getDelegate(): ViewManagerDelegate<DateRangePickerView> = delegate
 
+  override fun onDropViewInstance(view: DateRangePickerView) {
+    super.onDropViewInstance(view)
+    view.onDropInstance()
+  }
+
   override fun addEventEmitters(reactContext: ThemedReactContext, view: DateRangePickerView) {
     view.eventDispatcher = UIManagerHelper.getEventDispatcherForReactTag(reactContext, view.id)
   }

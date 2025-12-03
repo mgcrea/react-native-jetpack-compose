@@ -1,8 +1,8 @@
 import React, { FunctionComponent, useCallback, useMemo } from "react";
 import type { NativeSyntheticEvent, StyleProp, ViewStyle } from "react-native";
-import { StyleSheet } from "react-native";
 
 import DatePickerNativeComponent, {
+  type CancelEvent,
   type ConfirmEvent,
   type DateChangeEvent,
   type NativeDatePickerProps,
@@ -27,11 +27,10 @@ export interface YearRange {
 }
 
 /**
- * Props for the DatePicker component (inline mode).
+ * Props for the DatePicker component.
  */
 export type DatePickerProps = Omit<
   NativeDatePickerProps,
-  | "isInline"
   | "selectedDateMillis"
   | "initialDisplayedMonthMillis"
   | "minDateMillis"
@@ -41,11 +40,8 @@ export type DatePickerProps = Omit<
   | "onConfirm"
   | "onCancel"
   | "onDateChange"
-  | "confirmLabel"
-  | "cancelLabel"
+  | "titleText"
 > & {
-  /** Controls the visibility of the date picker. */
-  visible?: boolean;
   /** The selected date value. Accepts Date, epoch milliseconds, or ISO string. */
   value?: Date | number | string | null;
   /** The initially displayed month. Accepts Date, epoch milliseconds, or ISO string. */
@@ -60,29 +56,46 @@ export type DatePickerProps = Omit<
   initialDisplayMode?: "picker" | "input";
   /** Whether to show the mode toggle button. Defaults to true. */
   showModeToggle?: boolean;
-  /** Title text displayed at the top of the picker. */
+  /** Label for the confirm button. Defaults to "OK". */
+  confirmLabel?: string;
+  /** Label for the cancel button. Defaults to "Cancel". */
+  cancelLabel?: string;
+  /** Title text displayed at the top of the picker dialog. */
   title?: string;
-  /** Callback fired when the selected date changes. */
+  /** Floating label text for the text field. */
+  label?: string;
+  /** Placeholder text when no date is selected. */
+  placeholder?: string;
+  /** Whether the picker field is disabled. */
+  disabled?: boolean;
+  /** Callback fired when user confirms selection with the selected date. */
+  onConfirm?: (date: Date | null) => void;
+  /** Callback fired when user cancels/dismisses the dialog. */
+  onCancel?: () => void;
+  /** Callback fired when the selected date changes (before confirmation). */
   onChange?: (date: Date | null) => void;
   /** Custom styles applied to the container. */
   style?: StyleProp<ViewStyle>;
 };
 
 /**
- * An inline date picker component powered by Jetpack Compose's DatePicker.
+ * A date picker component with a text field that opens a date picker dialog.
+ *
+ * Renders an OutlinedTextField that displays the selected date. When clicked,
+ * opens a DatePickerDialog for date selection.
  *
  * @example
  * ```tsx
  * <DatePicker
- *   visible
  *   value={selectedDate}
- *   minDate={new Date()}
- *   onChange={(date) => setSelectedDate(date)}
+ *   label="Birth Date"
+ *   placeholder="Select a date"
+ *   onConfirm={(date) => setSelectedDate(date)}
+ *   onCancel={() => console.log('Cancelled')}
  * />
  * ```
  */
 export const DatePicker: FunctionComponent<DatePickerProps> = ({
-  visible = true,
   value,
   initialDisplayedMonth,
   minDate,
@@ -90,7 +103,14 @@ export const DatePicker: FunctionComponent<DatePickerProps> = ({
   yearRange,
   initialDisplayMode = "picker",
   showModeToggle = true,
+  confirmLabel,
+  cancelLabel,
   title,
+  label,
+  placeholder,
+  disabled,
+  onConfirm,
+  onCancel,
   onChange,
   style,
   ...props
@@ -104,17 +124,23 @@ export const DatePicker: FunctionComponent<DatePickerProps> = ({
   const minDateMillis = useMemo(() => toEpochMillis(minDate), [minDate]);
   const maxDateMillis = useMemo(() => toEpochMillis(maxDate), [maxDate]);
 
-  const handleDateChange = useCallback(
-    (event: NativeSyntheticEvent<DateChangeEvent>) => {
-      const millis = event.nativeEvent.selectedDateMillis;
-      onChange?.(millis ? new Date(millis) : null);
-    },
-    [onChange],
-  );
-
-  // For inline mode, we don't need onConfirm/onCancel - changes are immediate
   const handleConfirm = useCallback(
     (event: NativeSyntheticEvent<ConfirmEvent>) => {
+      const millis = event.nativeEvent.selectedDateMillis;
+      onConfirm?.(millis ? new Date(millis) : null);
+    },
+    [onConfirm],
+  );
+
+  const handleCancel = useCallback(
+    (_event: NativeSyntheticEvent<CancelEvent>) => {
+      onCancel?.();
+    },
+    [onCancel],
+  );
+
+  const handleDateChange = useCallback(
+    (event: NativeSyntheticEvent<DateChangeEvent>) => {
       const millis = event.nativeEvent.selectedDateMillis;
       onChange?.(millis ? new Date(millis) : null);
     },
@@ -124,8 +150,6 @@ export const DatePicker: FunctionComponent<DatePickerProps> = ({
   return (
     <DatePickerNativeComponent
       {...props}
-      isInline={true}
-      visible={visible}
       selectedDateMillis={selectedDateMillis}
       initialDisplayedMonthMillis={initialDisplayedMonthMillis}
       minDateMillis={minDateMillis}
@@ -134,16 +158,16 @@ export const DatePicker: FunctionComponent<DatePickerProps> = ({
       yearRangeEnd={yearRange?.end}
       initialDisplayMode={initialDisplayMode}
       showModeToggle={showModeToggle}
+      confirmLabel={confirmLabel}
+      cancelLabel={cancelLabel}
       titleText={title}
-      onDateChange={handleDateChange}
+      label={label}
+      placeholder={placeholder}
+      disabled={disabled}
       onConfirm={handleConfirm}
-      style={[styles.base, style]}
+      onCancel={handleCancel}
+      onDateChange={handleDateChange}
+      style={style}
     />
   );
 };
-
-const styles = StyleSheet.create({
-  base: {
-    minHeight: 400,
-  },
-});

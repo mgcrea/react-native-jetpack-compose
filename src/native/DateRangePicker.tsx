@@ -1,9 +1,9 @@
 import React, { FunctionComponent, useCallback, useMemo } from "react";
 import type { NativeSyntheticEvent, StyleProp, ViewStyle } from "react-native";
-import { StyleSheet } from "react-native";
 
 import DateRangePickerNativeComponent, {
   type NativeDateRangePickerProps,
+  type RangeCancelEvent,
   type RangeConfirmEvent,
   type RangeDateChangeEvent,
 } from "./DateRangePickerNativeComponent";
@@ -35,11 +35,10 @@ export interface DateRange {
 }
 
 /**
- * Props for the DateRangePicker component (inline mode).
+ * Props for the DateRangePicker component.
  */
 export type DateRangePickerProps = Omit<
   NativeDateRangePickerProps,
-  | "isInline"
   | "startDateMillis"
   | "endDateMillis"
   | "initialDisplayedMonthMillis"
@@ -50,11 +49,8 @@ export type DateRangePickerProps = Omit<
   | "onConfirm"
   | "onCancel"
   | "onDateChange"
-  | "confirmLabel"
-  | "cancelLabel"
+  | "titleText"
 > & {
-  /** Controls the visibility of the date range picker. */
-  visible?: boolean;
   /** The selected date range value. */
   value?: DateRange | null;
   /** The initially displayed month. Accepts Date, epoch milliseconds, or ISO string. */
@@ -69,32 +65,49 @@ export type DateRangePickerProps = Omit<
   initialDisplayMode?: "picker" | "input";
   /** Whether to show the mode toggle button. Defaults to true. */
   showModeToggle?: boolean;
-  /** Title text displayed at the top of the picker. */
+  /** Label for the confirm button. Defaults to "OK". */
+  confirmLabel?: string;
+  /** Label for the cancel button. Defaults to "Cancel". */
+  cancelLabel?: string;
+  /** Title text displayed at the top of the picker dialog. */
   title?: string;
-  /** Callback fired when the selected date range changes. */
+  /** Floating label text for the text field. */
+  label?: string;
+  /** Placeholder text when no date range is selected. */
+  placeholder?: string;
+  /** Whether the picker field is disabled. */
+  disabled?: boolean;
+  /** Callback fired when user confirms selection with the selected date range. */
+  onConfirm?: (range: DateRange) => void;
+  /** Callback fired when user cancels/dismisses the dialog. */
+  onCancel?: () => void;
+  /** Callback fired when the selected date range changes (before confirmation). */
   onChange?: (range: DateRange) => void;
   /** Custom styles applied to the container. */
   style?: StyleProp<ViewStyle>;
 };
 
 /**
- * An inline date range picker component powered by Jetpack Compose's DateRangePicker.
+ * A date range picker component with a text field that opens a date range picker dialog.
+ *
+ * Renders an OutlinedTextField that displays the selected date range. When clicked,
+ * opens a DateRangePickerDialog for date range selection.
  *
  * @example
  * ```tsx
  * <DateRangePicker
- *   visible
  *   value={{ startDate, endDate }}
- *   minDate={new Date()}
- *   onChange={(range) => {
+ *   label="Trip Dates"
+ *   placeholder="Select dates"
+ *   onConfirm={(range) => {
  *     setStartDate(range.startDate);
  *     setEndDate(range.endDate);
  *   }}
+ *   onCancel={() => console.log('Cancelled')}
  * />
  * ```
  */
 export const DateRangePicker: FunctionComponent<DateRangePickerProps> = ({
-  visible = true,
   value,
   initialDisplayedMonth,
   minDate,
@@ -102,7 +115,14 @@ export const DateRangePicker: FunctionComponent<DateRangePickerProps> = ({
   yearRange,
   initialDisplayMode = "picker",
   showModeToggle = true,
+  confirmLabel,
+  cancelLabel,
   title,
+  label,
+  placeholder,
+  disabled,
+  onConfirm,
+  onCancel,
   onChange,
   style,
   ...props
@@ -117,20 +137,26 @@ export const DateRangePicker: FunctionComponent<DateRangePickerProps> = ({
   const minDateMillis = useMemo(() => toEpochMillis(minDate), [minDate]);
   const maxDateMillis = useMemo(() => toEpochMillis(maxDate), [maxDate]);
 
-  const handleDateChange = useCallback(
-    (event: NativeSyntheticEvent<RangeDateChangeEvent>) => {
+  const handleConfirm = useCallback(
+    (event: NativeSyntheticEvent<RangeConfirmEvent>) => {
       const { startDateMillis: start, endDateMillis: end } = event.nativeEvent;
-      onChange?.({
+      onConfirm?.({
         startDate: start ? new Date(start) : null,
         endDate: end ? new Date(end) : null,
       });
     },
-    [onChange],
+    [onConfirm],
   );
 
-  // For inline mode, we don't need onConfirm/onCancel - changes are immediate
-  const handleConfirm = useCallback(
-    (event: NativeSyntheticEvent<RangeConfirmEvent>) => {
+  const handleCancel = useCallback(
+    (_event: NativeSyntheticEvent<RangeCancelEvent>) => {
+      onCancel?.();
+    },
+    [onCancel],
+  );
+
+  const handleDateChange = useCallback(
+    (event: NativeSyntheticEvent<RangeDateChangeEvent>) => {
       const { startDateMillis: start, endDateMillis: end } = event.nativeEvent;
       onChange?.({
         startDate: start ? new Date(start) : null,
@@ -143,8 +169,6 @@ export const DateRangePicker: FunctionComponent<DateRangePickerProps> = ({
   return (
     <DateRangePickerNativeComponent
       {...props}
-      isInline={true}
-      visible={visible}
       startDateMillis={startDateMillis}
       endDateMillis={endDateMillis}
       initialDisplayedMonthMillis={initialDisplayedMonthMillis}
@@ -154,16 +178,16 @@ export const DateRangePicker: FunctionComponent<DateRangePickerProps> = ({
       yearRangeEnd={yearRange?.end}
       initialDisplayMode={initialDisplayMode}
       showModeToggle={showModeToggle}
+      confirmLabel={confirmLabel}
+      cancelLabel={cancelLabel}
       titleText={title}
-      onDateChange={handleDateChange}
+      label={label}
+      placeholder={placeholder}
+      disabled={disabled}
       onConfirm={handleConfirm}
-      style={[styles.base, style]}
+      onCancel={handleCancel}
+      onDateChange={handleDateChange}
+      style={style}
     />
   );
 };
-
-const styles = StyleSheet.create({
-  base: {
-    minHeight: 400,
-  },
-});

@@ -28,11 +28,6 @@ export interface RangeDateChangeEvent {
  * Used by React Native codegen to generate native bindings.
  */
 export interface NativeDateRangePickerProps extends ViewProps {
-  /** Controls the visibility of the date picker (for modal mode). */
-  visible?: boolean | null;
-  /** When true, renders embedded instead of as a modal dialog. */
-  isInline?: boolean | null;
-
   /** The selected start date as epoch milliseconds. */
   startDateMillis?: Double | null;
   /** The selected end date as epoch milliseconds. */
@@ -54,12 +49,19 @@ export interface NativeDateRangePickerProps extends ViewProps {
   /** Whether to show the mode toggle button. */
   showModeToggle?: boolean | null;
 
-  /** Label for the confirm button (modal only). */
+  /** Label for the confirm button. */
   confirmLabel?: string | null;
-  /** Label for the cancel button (modal only). */
+  /** Label for the cancel button. */
   cancelLabel?: string | null;
   /** Title text displayed at the top of the picker. */
   titleText?: string | null;
+
+  /** Floating label text for the text field. */
+  label?: string | null;
+  /** Placeholder text when no value selected. */
+  placeholder?: string | null;
+  /** Whether the picker is disabled. */
+  disabled?: boolean | null;
 
   /** Native event handler fired when user confirms selection. */
   onConfirm?: DirectEventHandler<RangeConfirmEvent> | null;

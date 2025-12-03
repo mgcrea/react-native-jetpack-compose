@@ -1,11 +1,13 @@
 package com.mgcrea.reactnative.jetpackcompose
 
 import android.annotation.SuppressLint
-import android.app.Dialog
 import android.util.Log
 import android.view.WindowManager
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.interaction.PressInteraction
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -21,6 +23,7 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.ArrowDropDown
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.Icon
@@ -29,6 +32,7 @@ import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.Recomposer
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
@@ -43,18 +47,12 @@ import androidx.compose.ui.platform.ComposeView
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.compositionContext
 import androidx.compose.ui.unit.dp
-import androidx.lifecycle.Lifecycle
-import androidx.lifecycle.LifecycleOwner
-import androidx.lifecycle.LifecycleRegistry
 import androidx.lifecycle.setViewTreeLifecycleOwner
-import androidx.savedstate.SavedStateRegistry
-import androidx.savedstate.SavedStateRegistryController
-import androidx.savedstate.SavedStateRegistryOwner
 import androidx.savedstate.setViewTreeSavedStateRegistryOwner
 import com.facebook.react.uimanager.ThemedReactContext
 import com.google.android.material.bottomsheet.BottomSheetBehavior
 import com.google.android.material.bottomsheet.BottomSheetDialog
-import com.mgcrea.reactnative.jetpackcompose.core.DialogHostView
+import com.mgcrea.reactnative.jetpackcompose.core.InlineComposeView
 import com.mgcrea.reactnative.jetpackcompose.events.DismissEvent
 import com.mgcrea.reactnative.jetpackcompose.events.ItemSelectEvent
 import kotlinx.coroutines.CoroutineScope
@@ -74,23 +72,15 @@ data class SheetPickerOption(val value: String, val label: String)
  * - Checkmark indicator for selected item
  * - Auto-dismiss on selection (configurable)
  * - Material3 styling
+ * - Read-only OutlinedTextField trigger
  */
 @SuppressLint("ViewConstructor")
 internal class SheetPickerView(reactContext: ThemedReactContext) :
-  DialogHostView(reactContext, TAG),
-  LifecycleOwner,
-  SavedStateRegistryOwner {
+  InlineComposeView(reactContext, TAG) {
 
   companion object {
     private const val TAG = "SheetPickerView"
   }
-
-  // Lifecycle management for Compose
-  private val lifecycleRegistry = LifecycleRegistry(this)
-  private val savedStateRegistryController = SavedStateRegistryController.create(this)
-
-  override val lifecycle: Lifecycle get() = lifecycleRegistry
-  override val savedStateRegistry: SavedStateRegistry get() = savedStateRegistryController.savedStateRegistry
 
   // State backing for Compose
   private val _options = mutableStateOf<List<SheetPickerOption>>(emptyList())
@@ -99,13 +89,17 @@ internal class SheetPickerView(reactContext: ThemedReactContext) :
   private val _searchPlaceholder = mutableStateOf("Search")
   private val _autoDismiss = mutableStateOf(true)
 
+  // New state for OutlinedTextField
+  private val _label = mutableStateOf<String?>(null)
+  private val _placeholder = mutableStateOf<String?>(null)
+  private val _disabled = mutableStateOf(false)
+
+  // Dialog state
+  private var _showDialog by mutableStateOf(false)
+  private var dialog: BottomSheetDialog? = null
+
   // Local search state (not exposed to React)
   private var _searchText by mutableStateOf("")
-
-  init {
-    savedStateRegistryController.performRestore(null)
-    lifecycleRegistry.handleLifecycleEvent(Lifecycle.Event.ON_CREATE)
-  }
 
   // Property setters called by ViewManager
   fun setOptions(json: String?) {
@@ -128,6 +122,18 @@ internal class SheetPickerView(reactContext: ThemedReactContext) :
     _autoDismiss.value = value
   }
 
+  fun setLabel(value: String?) {
+    _label.value = value
+  }
+
+  fun setPlaceholder(value: String?) {
+    _placeholder.value = value
+  }
+
+  fun setDisabled(value: Boolean) {
+    _disabled.value = value
+  }
+
   private fun parseOptions(json: String): List<SheetPickerOption> {
     return try {
       val jsonArray = JSONArray(json)
@@ -144,20 +150,60 @@ internal class SheetPickerView(reactContext: ThemedReactContext) :
     }
   }
 
-  override fun createDialog(): Dialog {
-    val activity = reactContext.currentActivity ?: throw IllegalStateException("No activity")
+  private fun getSelectedLabel(): String {
+    val selected = _selectedValue.value ?: return ""
+    return _options.value.find { it.value == selected }?.label ?: ""
+  }
 
-    lifecycleRegistry.handleLifecycleEvent(Lifecycle.Event.ON_START)
-    lifecycleRegistry.handleLifecycleEvent(Lifecycle.Event.ON_RESUME)
+  @Composable
+  override fun ComposeContent() {
+    val disabled = _disabled.value
+    val label = _label.value
+    val placeholder = _placeholder.value
 
-    return BottomSheetDialog(activity).apply {
+    // Interaction source to detect clicks on the read-only text field
+    val interactionSource = remember { MutableInteractionSource() }
+
+    LaunchedEffect(interactionSource) {
+      interactionSource.interactions.collect { interaction ->
+        if (interaction is PressInteraction.Release && !disabled) {
+          showDialog()
+        }
+      }
+    }
+
+    // OutlinedTextField that shows selected value
+    OutlinedTextField(
+      modifier = Modifier.fillMaxWidth(),
+      value = getSelectedLabel(),
+      onValueChange = {},
+      readOnly = true,
+      singleLine = true,
+      enabled = !disabled,
+      label = label?.let { { Text(it) } },
+      placeholder = placeholder?.let { { Text(it, maxLines = 1) } },
+      trailingIcon = {
+        Icon(Icons.Default.ArrowDropDown, contentDescription = "Open picker")
+      },
+      interactionSource = interactionSource
+    )
+  }
+
+  private fun showDialog() {
+    if (_showDialog || dialog != null) return
+
+    val activity = reactContext.currentActivity ?: return
+    _showDialog = true
+
+    dialog = BottomSheetDialog(activity).apply {
       setOnDismissListener {
         // Reset search when dismissed
         _searchText = ""
-        if (isVisible) {
-          markDismissed()
+        if (_showDialog) {
+          _showDialog = false
           dispatchEvent(DismissEvent(getSurfaceId(), id))
         }
+        this@SheetPickerView.dialog = null
       }
       behavior.apply {
         isFitToContents = true
@@ -165,14 +211,12 @@ internal class SheetPickerView(reactContext: ThemedReactContext) :
         state = BottomSheetBehavior.STATE_EXPANDED
       }
       // Allow keyboard to show without resizing
+      @Suppress("DEPRECATION")
       window?.setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_ADJUST_RESIZE)
     }
-  }
-
-  override fun onDialogShow() {
-    val dialog = dialog as? BottomSheetDialog ?: return
 
     val composeView = ComposeView(reactContext).apply {
+      // Use the parent view's lifecycle owners
       setViewTreeLifecycleOwner(this@SheetPickerView)
       setViewTreeSavedStateRegistryOwner(this@SheetPickerView)
 
@@ -188,19 +232,16 @@ internal class SheetPickerView(reactContext: ThemedReactContext) :
       }
     }
 
-    dialog.setContentView(composeView)
-    dialog.behavior.state = BottomSheetBehavior.STATE_EXPANDED
-  }
-
-  override fun onDialogDismiss() {
-    lifecycleRegistry.handleLifecycleEvent(Lifecycle.Event.ON_PAUSE)
-    lifecycleRegistry.handleLifecycleEvent(Lifecycle.Event.ON_STOP)
+    dialog?.setContentView(composeView)
+    dialog?.show()
+    dialog?.behavior?.state = BottomSheetBehavior.STATE_EXPANDED
   }
 
   private fun handleSelect(value: String) {
     dispatchEvent(ItemSelectEvent(getSurfaceId(), id, value))
     if (_autoDismiss.value) {
       _searchText = ""
+      _showDialog = false
       dialog?.dismiss()
     }
   }
@@ -350,7 +391,7 @@ internal class SheetPickerView(reactContext: ThemedReactContext) :
             .clip(CircleShape),
           shape = CircleShape,
           color = MaterialTheme.colorScheme.surface,
-          border = androidx.compose.foundation.BorderStroke(
+          border = BorderStroke(
             width = 1.5.dp,
             color = MaterialTheme.colorScheme.outline.copy(alpha = 0.4f)
           )

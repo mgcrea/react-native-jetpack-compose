@@ -1,5 +1,5 @@
 import React, { FunctionComponent, useCallback, useMemo } from "react";
-import type { NativeSyntheticEvent, StyleProp, ViewStyle } from "react-native";
+import { StyleSheet, type NativeSyntheticEvent, type StyleProp, type ViewStyle } from "react-native";
 
 import SheetPickerNativeComponent, {
   type NativeSheetPickerProps,
@@ -22,20 +22,24 @@ export interface SheetPickerOption {
  */
 export type SheetPickerProps = Omit<
   NativeSheetPickerProps,
-  "visible" | "options" | "selectedValue" | "autoDismiss" | "onItemSelect" | "onDismiss"
+  "options" | "selectedValue" | "autoDismiss" | "disabled" | "onItemSelect" | "onDismiss"
 > & {
-  /** Controls the visibility of the sheet picker. */
-  visible?: boolean;
   /** Array of selectable options */
   options: SheetPickerOption[];
   /** Currently selected value */
   value?: string | null;
   /** Title displayed at the top of the picker sheet */
   title?: string;
-  /** Placeholder text for the search field */
+  /** Placeholder text for the search field in the sheet */
   searchPlaceholder?: string;
   /** Whether to automatically dismiss the sheet after selection. Defaults to true. */
   autoDismiss?: boolean;
+  /** Floating label text for the text field. */
+  label?: string;
+  /** Placeholder text when no value selected. */
+  placeholder?: string;
+  /** Whether the picker is disabled. */
+  disabled?: boolean;
   /** Callback fired when an option is selected */
   onSelect?: (value: string) => void;
   /** Callback fired when the sheet is dismissed */
@@ -45,7 +49,7 @@ export type SheetPickerProps = Omit<
 };
 
 /**
- * A searchable picker component presented in a modal bottom sheet.
+ * A searchable picker component with a text field that opens a modal bottom sheet.
  * Ideal for long lists like country or language selection.
  *
  * @example
@@ -58,26 +62,26 @@ export type SheetPickerProps = Omit<
  * ];
  *
  * <SheetPicker
- *   visible={isOpen}
  *   options={countries}
  *   value={selectedCountry}
+ *   label="Country"
+ *   placeholder="Select a country"
  *   title="Select Country"
  *   searchPlaceholder="Search countries..."
- *   onSelect={(value) => {
- *     setSelectedCountry(value);
- *     setIsOpen(false);
- *   }}
- *   onDismiss={() => setIsOpen(false)}
+ *   onSelect={(value) => setSelectedCountry(value)}
+ *   onDismiss={() => console.log('Sheet dismissed')}
  * />
  * ```
  */
 export const SheetPicker: FunctionComponent<SheetPickerProps> = ({
-  visible = false,
   options,
   value,
   title,
   searchPlaceholder,
   autoDismiss = true,
+  label,
+  placeholder,
+  disabled = false,
   onSelect,
   onDismiss,
   style,
@@ -103,15 +107,23 @@ export const SheetPicker: FunctionComponent<SheetPickerProps> = ({
   return (
     <SheetPickerNativeComponent
       {...props}
-      visible={visible}
       options={optionsJson}
       selectedValue={value}
       title={title}
       searchPlaceholder={searchPlaceholder}
       autoDismiss={autoDismiss}
+      label={label}
+      placeholder={placeholder}
+      disabled={disabled}
       onItemSelect={handleSelect}
       onDismiss={handleDismiss}
-      style={style}
+      style={[styles.base, style]}
     />
   );
 };
+
+const styles = StyleSheet.create({
+  base: {
+    minHeight: 64,
+  },
+});

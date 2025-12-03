@@ -21,8 +21,6 @@ export interface SheetPickerDismissEvent {}
  * Used by React Native codegen to generate native bindings.
  */
 export interface NativeSheetPickerProps extends ViewProps {
-  /** Controls the visibility of the sheet picker. */
-  visible?: boolean | null;
   /** JSON string of options array: [{ value: string, label: string }, ...] */
   options?: string | null;
   /** Currently selected value */
@@ -33,6 +31,13 @@ export interface NativeSheetPickerProps extends ViewProps {
   searchPlaceholder?: string | null;
   /** Whether to automatically dismiss the sheet after selection. Defaults to true. */
   autoDismiss?: boolean | null;
+
+  /** Floating label text for the text field. */
+  label?: string | null;
+  /** Placeholder text when no value selected. */
+  placeholder?: string | null;
+  /** Whether the picker is disabled. */
+  disabled?: boolean | null;
 
   /** Native event handler fired when an option is selected. */
   onItemSelect?: DirectEventHandler<SheetPickerSelectEvent> | null;

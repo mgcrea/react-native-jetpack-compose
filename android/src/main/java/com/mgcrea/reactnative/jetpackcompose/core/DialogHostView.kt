@@ -33,6 +33,11 @@ abstract class DialogHostView(
   /** Event dispatcher for Fabric events, set by ViewManager */
   var eventDispatcher: EventDispatcher? = null
 
+  /** Flag to track if view has been detached - used to prevent use-after-free crashes */
+  @Volatile
+  protected var isDetached: Boolean = false
+    private set
+
   init {
     visibility = GONE  // Never blocks touches
   }
@@ -88,11 +93,24 @@ abstract class DialogHostView(
   }
 
   /**
+   * Called by ViewManager's onDropViewInstance before the view is destroyed.
+   * Performs early cleanup to prevent use-after-free crashes in C++ props destructors.
+   */
+  open fun onDropInstance() {
+    // Set detached flag first to prevent use-after-free crashes
+    isDetached = true
+    // Clear event dispatcher to prevent events during cleanup
+    eventDispatcher = null
+  }
+
+  /**
    * Dispatches an event to JavaScript using the Fabric event system.
+   * Safely ignores dispatch if the view has been detached to prevent use-after-free crashes.
    *
    * @param event The event to dispatch
    */
   protected fun dispatchEvent(event: Event<*>) {
+    if (isDetached) return
     eventDispatcher?.dispatchEvent(event)
   }
 
@@ -103,8 +121,11 @@ abstract class DialogHostView(
 
   override fun onDetachedFromWindow() {
     super.onDetachedFromWindow()
-    // Clear event dispatcher first to prevent events during cleanup
-    eventDispatcher = null
+    // Ensure cleanup is done even if onDropInstance wasn't called
+    if (!isDetached) {
+      isDetached = true
+      eventDispatcher = null
+    }
     // Mark as not visible to prevent dismiss events
     isVisible = false
     dialog?.dismiss()

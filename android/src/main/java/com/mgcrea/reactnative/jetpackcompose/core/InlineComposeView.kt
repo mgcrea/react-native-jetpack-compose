@@ -51,6 +51,11 @@ abstract class InlineComposeView(
   /** Event dispatcher for Fabric events, set by ViewManager */
   var eventDispatcher: EventDispatcher? = null
 
+  /** Flag to track if view has been detached - used to prevent use-after-free crashes */
+  @Volatile
+  protected var isDetached: Boolean = false
+    private set
+
   /**
    * The Composable content to render.
    * Implement this in subclasses.
@@ -109,9 +114,23 @@ abstract class InlineComposeView(
     addView(composeView, LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.WRAP_CONTENT))
   }
 
-  override fun onDetachedFromWindow() {
-    // Clear event dispatcher first to prevent events during cleanup
+  /**
+   * Called by ViewManager's onDropViewInstance before the view is destroyed.
+   * Performs early cleanup to prevent use-after-free crashes in C++ props destructors.
+   */
+  open fun onDropInstance() {
+    // Set detached flag first to prevent use-after-free crashes
+    isDetached = true
+    // Clear event dispatcher to prevent events during cleanup
     eventDispatcher = null
+  }
+
+  override fun onDetachedFromWindow() {
+    // Ensure cleanup is done even if onDropInstance wasn't called
+    if (!isDetached) {
+      isDetached = true
+      eventDispatcher = null
+    }
     lifecycleRegistry.handleLifecycleEvent(Lifecycle.Event.ON_PAUSE)
     lifecycleRegistry.handleLifecycleEvent(Lifecycle.Event.ON_STOP)
     lifecycleRegistry.handleLifecycleEvent(Lifecycle.Event.ON_DESTROY)
@@ -126,10 +145,12 @@ abstract class InlineComposeView(
 
   /**
    * Dispatches an event to JavaScript using the Fabric event system.
+   * Safely ignores dispatch if the view has been detached to prevent use-after-free crashes.
    *
    * @param event The event to dispatch
    */
   protected fun dispatchEvent(event: Event<*>) {
+    if (isDetached) return
     eventDispatcher?.dispatchEvent(event)
   }
 

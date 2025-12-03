@@ -29,6 +29,14 @@ internal class ModalBottomSheetManager :
     view.setVisible(value)
   }
 
+  override fun setShowDragHandle(view: ModalBottomSheetViewDialog, value: Boolean) {
+    view.setShowDragHandle(value)
+  }
+
+  override fun setMaxHeightRatio(view: ModalBottomSheetViewDialog, value: Double) {
+    view.setMaxHeightRatio(value)
+  }
+
   override fun addView(parent: ModalBottomSheetViewDialog, child: android.view.View, index: Int) {
     parent.addView(child, index)
   }

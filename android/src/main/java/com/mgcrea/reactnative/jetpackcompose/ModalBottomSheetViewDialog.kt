@@ -2,9 +2,14 @@ package com.mgcrea.reactnative.jetpackcompose
 
 import android.annotation.SuppressLint
 import android.app.Dialog
+import android.graphics.drawable.GradientDrawable
+import android.util.TypedValue
+import android.view.Gravity
 import android.view.MotionEvent
 import android.view.View
 import android.view.ViewGroup
+import android.widget.FrameLayout
+import android.widget.LinearLayout
 import com.facebook.react.uimanager.JSPointerDispatcher
 import com.facebook.react.uimanager.JSTouchDispatcher
 import com.facebook.react.uimanager.RootView
@@ -109,6 +114,49 @@ internal class ModalBottomSheetViewDialog(reactContext: ThemedReactContext) :
     onContentHeightChanged(height)
   }
   private var contentHeight = 0
+  private var showDragHandle = true
+  private var maxHeightRatio = 0.9
+
+  fun setShowDragHandle(value: Boolean) {
+    showDragHandle = value
+  }
+
+  fun setMaxHeightRatio(value: Double) {
+    maxHeightRatio = value
+  }
+
+  private fun dpToPx(dp: Float): Int {
+    return TypedValue.applyDimension(
+      TypedValue.COMPLEX_UNIT_DIP,
+      dp,
+      reactContext.resources.displayMetrics
+    ).toInt()
+  }
+
+  private fun createDragHandle(): View {
+    val handleWidth = dpToPx(32f)
+    val handleHeight = dpToPx(4f)
+    val verticalPadding = dpToPx(12f)
+
+    // Create the drag handle shape
+    val handleDrawable = GradientDrawable().apply {
+      shape = GradientDrawable.RECTANGLE
+      cornerRadius = handleHeight / 2f
+      setColor(0x66808080) // Semi-transparent gray
+    }
+
+    // Create the handle view
+    val handleView = View(reactContext).apply {
+      layoutParams = LinearLayout.LayoutParams(handleWidth, handleHeight).apply {
+        gravity = Gravity.CENTER_HORIZONTAL
+        topMargin = verticalPadding
+        bottomMargin = verticalPadding
+      }
+      background = handleDrawable
+    }
+
+    return handleView
+  }
 
   private fun onContentHeightChanged(height: Int) {
     contentHeight = height
@@ -139,11 +187,43 @@ internal class ModalBottomSheetViewDialog(reactContext: ThemedReactContext) :
 
   override fun onDialogShow() {
     (dialog as? BottomSheetDialog)?.apply {
-      setContentView(controller)
+      // Calculate max height
+      val displayMetrics = reactContext.resources.displayMetrics
+      val maxHeight = (displayMetrics.heightPixels * maxHeightRatio).toInt()
+
+      // Create container with drag handle and content
+      val container = LinearLayout(reactContext).apply {
+        orientation = LinearLayout.VERTICAL
+        layoutParams = FrameLayout.LayoutParams(
+          FrameLayout.LayoutParams.MATCH_PARENT,
+          FrameLayout.LayoutParams.WRAP_CONTENT
+        ).apply {
+          this.height = maxHeight.coerceAtMost(FrameLayout.LayoutParams.WRAP_CONTENT)
+        }
+      }
+
+      // Add drag handle if enabled
+      if (showDragHandle) {
+        container.addView(createDragHandle())
+      }
+
+      // Add controller (content)
+      (controller.parent as? ViewGroup)?.removeView(controller)
+      container.addView(controller, LinearLayout.LayoutParams(
+        LinearLayout.LayoutParams.MATCH_PARENT,
+        LinearLayout.LayoutParams.WRAP_CONTENT
+      ).apply {
+        weight = 1f
+      })
+
+      setContentView(container)
+
+      // Limit the bottom sheet max height
       behavior.apply {
         if (contentHeight > 0) {
-          peekHeight = contentHeight
+          peekHeight = contentHeight.coerceAtMost(maxHeight)
         }
+        this.maxHeight = maxHeight
         state = BottomSheetBehavior.STATE_EXPANDED
       }
     }

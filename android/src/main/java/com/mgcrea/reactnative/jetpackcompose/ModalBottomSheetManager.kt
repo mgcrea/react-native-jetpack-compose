@@ -8,20 +8,20 @@ import com.facebook.react.viewmanagers.ModalBottomSheetManagerDelegate
 import com.facebook.react.viewmanagers.ModalBottomSheetManagerInterface
 
 internal class ModalBottomSheetManager :
-  ViewGroupManager<ModalBottomSheetView>(),
-  ModalBottomSheetManagerInterface<ModalBottomSheetView> {
+  ViewGroupManager<ModalBottomSheetViewDialog>(),
+  ModalBottomSheetManagerInterface<ModalBottomSheetViewDialog> {
 
-  private val delegate: ViewManagerDelegate<ModalBottomSheetView> =
+  private val delegate: ViewManagerDelegate<ModalBottomSheetViewDialog> =
     ModalBottomSheetManagerDelegate(this)
 
   override fun getName(): String = NAME
 
-  override fun createViewInstance(context: ThemedReactContext): ModalBottomSheetView =
-    ModalBottomSheetView(context)
+  override fun createViewInstance(context: ThemedReactContext): ModalBottomSheetViewDialog =
+    ModalBottomSheetViewDialog(context)
 
-  override fun getDelegate(): ViewManagerDelegate<ModalBottomSheetView> = delegate
+  override fun getDelegate(): ViewManagerDelegate<ModalBottomSheetViewDialog> = delegate
 
-  override fun setVisible(view: ModalBottomSheetView, value: Boolean) {
+  override fun setVisible(view: ModalBottomSheetViewDialog, value: Boolean) {
     view.setVisible(value)
   }
 
@@ -34,19 +34,19 @@ internal class ModalBottomSheetManager :
       .build()
   }
 
-  override fun addView(parent: ModalBottomSheetView, child: android.view.View, index: Int) {
+  override fun addView(parent: ModalBottomSheetViewDialog, child: android.view.View, index: Int) {
     parent.addView(child, index)
   }
 
-  override fun removeViewAt(parent: ModalBottomSheetView, index: Int) {
+  override fun removeViewAt(parent: ModalBottomSheetViewDialog, index: Int) {
     parent.removeViewAt(index)
   }
 
-  override fun getChildCount(parent: ModalBottomSheetView): Int {
+  override fun getChildCount(parent: ModalBottomSheetViewDialog): Int {
     return parent.childCount
   }
 
-  override fun getChildAt(parent: ModalBottomSheetView, index: Int): android.view.View {
+  override fun getChildAt(parent: ModalBottomSheetViewDialog, index: Int): android.view.View {
     return parent.getChildAt(index)
   }
 

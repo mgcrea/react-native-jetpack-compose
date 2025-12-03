@@ -1,37 +1,73 @@
-import React, { FunctionComponent } from "react";
-import type { StyleProp, ViewStyle } from "react-native";
+import React, { FunctionComponent, useCallback } from "react";
+import type { NativeSyntheticEvent, StyleProp, ViewStyle } from "react-native";
 import { StyleSheet } from "react-native";
 
 import ModalBottomSheetNativeComponent, {
+  type DismissEvent,
   type NativeModalBottomSheetProps,
 } from "./ModalBottomSheetNativeComponent";
 
-export type ModalBottomSheetProps = NativeModalBottomSheetProps & {
+/**
+ * Props for the ModalBottomSheet component.
+ */
+export type ModalBottomSheetProps = Omit<NativeModalBottomSheetProps, "onDismiss"> & {
+  /** Controls the visibility of the bottom sheet. */
   visible?: boolean;
+  /** Callback fired when the sheet is dismissed (by user gesture or programmatically). */
   onDismiss?: () => void;
+  /** Custom styles applied to the container. */
   style?: StyleProp<ViewStyle>;
+  /** Content to render inside the bottom sheet. */
   children?: React.ReactNode;
 };
 
+/**
+ * A modal bottom sheet component powered by Jetpack Compose's ModalBottomSheet.
+ *
+ * @example
+ * ```tsx
+ * <ModalBottomSheet visible={isOpen} onDismiss={() => setIsOpen(false)}>
+ *   <Text>Sheet Content</Text>
+ * </ModalBottomSheet>
+ * ```
+ */
 export const ModalBottomSheet: FunctionComponent<ModalBottomSheetProps> = ({
   visible = false,
   onDismiss,
   style,
   children,
   ...props
-}) => (
-  <ModalBottomSheetNativeComponent
-    {...props}
-    visible={visible}
-    onDismiss={onDismiss}
-    style={[styles.base, style]}
-  >
-    {children}
-  </ModalBottomSheetNativeComponent>
-);
+}) => {
+  const handleDismiss = useCallback(
+    (_event: NativeSyntheticEvent<DismissEvent>) => {
+      onDismiss?.();
+    },
+    [onDismiss],
+  );
+
+  // Don't render the native view when not visible to avoid blocking touches
+  if (!visible) {
+    return null;
+  }
+
+  return (
+    <ModalBottomSheetNativeComponent
+      {...props}
+      visible={visible}
+      onDismiss={handleDismiss}
+      style={[styles.base, style]}
+    >
+      {children}
+    </ModalBottomSheetNativeComponent>
+  );
+};
 
 const styles = StyleSheet.create({
   base: {
-    // Default styles for the bottom sheet container
+    position: "absolute",
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
   },
 });

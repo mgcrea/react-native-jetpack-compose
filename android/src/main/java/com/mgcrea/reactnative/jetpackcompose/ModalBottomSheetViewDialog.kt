@@ -14,6 +14,7 @@ import com.facebook.react.views.view.ReactViewGroup
 import com.google.android.material.bottomsheet.BottomSheetBehavior
 import com.google.android.material.bottomsheet.BottomSheetDialog
 import com.mgcrea.reactnative.jetpackcompose.core.DialogHostView
+import com.mgcrea.reactnative.jetpackcompose.events.DismissEvent
 
 /**
  * Controller view that manages the bottom sheet content and implements RootView
@@ -126,7 +127,7 @@ internal class ModalBottomSheetViewDialog(reactContext: ThemedReactContext) :
       setOnDismissListener {
         if (isVisible) {
           markDismissed()
-          dispatchEvent("topDismiss")
+          dispatchEvent(DismissEvent(getSurfaceId(), id))
         }
       }
       behavior.apply {

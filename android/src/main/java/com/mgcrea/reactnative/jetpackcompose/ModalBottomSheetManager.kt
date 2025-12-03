@@ -1,7 +1,7 @@
 package com.mgcrea.reactnative.jetpackcompose
 
-import com.facebook.react.common.MapBuilder
 import com.facebook.react.uimanager.ThemedReactContext
+import com.facebook.react.uimanager.UIManagerHelper
 import com.facebook.react.uimanager.ViewGroupManager
 import com.facebook.react.uimanager.ViewManagerDelegate
 import com.facebook.react.viewmanagers.ModalBottomSheetManagerDelegate
@@ -21,17 +21,12 @@ internal class ModalBottomSheetManager :
 
   override fun getDelegate(): ViewManagerDelegate<ModalBottomSheetViewDialog> = delegate
 
-  override fun setVisible(view: ModalBottomSheetViewDialog, value: Boolean) {
-    view.setVisible(value)
+  override fun addEventEmitters(reactContext: ThemedReactContext, view: ModalBottomSheetViewDialog) {
+    view.eventDispatcher = UIManagerHelper.getEventDispatcherForReactTag(reactContext, view.id)
   }
 
-  override fun getExportedCustomDirectEventTypeConstants(): Map<String, Any> {
-    return MapBuilder.builder<String, Any>()
-      .put(
-        "topDismiss",
-        MapBuilder.of("registrationName", "onDismiss")
-      )
-      .build()
+  override fun setVisible(view: ModalBottomSheetViewDialog, value: Boolean) {
+    view.setVisible(value)
   }
 
   override fun addView(parent: ModalBottomSheetViewDialog, child: android.view.View, index: Int) {

@@ -36,7 +36,7 @@ android {
 
   sourceSets {
     main {
-      java.srcDirs += ["${projectDir}/build/generated/source/codegen/java"]
+      java.srcDirs += ["${projectDir}/generated/java"]
     }
   }
 

@@ -13,13 +13,12 @@
     "src",
     "dist",
     "android",
-    "!android/build",
     "react-native.config.cjs"
   ],
   "scripts": {
     "dev": "cd example; npm run dev",
     "logcat": "adb logcat --clear && adb logcat -s ReactNative:V ReactNativeJS:V AndroidRuntime:E *:S",
-    "codegen": "react-native codegen --platform android --outputPath android/build/generated/source/codegen",
+    "codegen": "react-native codegen --platform android --outputPath android/generated",
     "prettify": "prettier --write src/",
     "build": "npm run build:babel && npm run build:types",
     "build:babel": "babel src --out-dir dist --extensions \".ts,.tsx,.js,.jsx\" --copy-files",
@@ -63,7 +62,8 @@
     "jsSrcsDir": "src",
     "android": {
       "javaPackageName": "com.mgcrea.reactnative.jetpackcompose"
-    }
+    },
+    "includesGeneratedCode": true
   },
   "packageManager": "pnpm@10.24.0",
   "pnpm": {

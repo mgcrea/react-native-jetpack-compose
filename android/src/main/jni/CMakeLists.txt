@@ -5,15 +5,17 @@ set(LIB_LITERAL RNJetpackComposeSpec)
 set(LIB_TARGET_NAME react_codegen_${LIB_LITERAL})
 
 set(LIB_ANDROID_DIR ${CMAKE_CURRENT_SOURCE_DIR}/../../..)
-set(LIB_GENERATED_DIR ${LIB_ANDROID_DIR}/build/generated/source/codegen/jni)
+set(LIB_GENERATED_DIR ${LIB_ANDROID_DIR}/generated/jni)
 set(LIB_COMPONENTS_DIR ${LIB_GENERATED_DIR}/react/renderer/components/${LIB_LITERAL})
 
 file(GLOB LIB_CODEGEN_SRCS CONFIGURE_DEPENDS ${LIB_GENERATED_DIR}/*.cpp ${LIB_COMPONENTS_DIR}/*.cpp)
+set(LIB_CUSTOM_SRCS ${CMAKE_CURRENT_SOURCE_DIR}/RNJetpackComposeSpec.cpp)
 
 add_library(
   ${LIB_TARGET_NAME}
   SHARED
   ${LIB_CODEGEN_SRCS}
+  ${LIB_CUSTOM_SRCS}
 )
 
 target_include_directories(

@@ -3,6 +3,15 @@ import { codegenNativeComponent, type HostComponent, type ViewProps } from "reac
 import type { DirectEventHandler } from "react-native/Libraries/Types/CodegenTypes";
 
 /**
+ * Option type for the SheetPicker.
+ * Using Readonly types for codegen compatibility.
+ */
+export type NativeSheetPickerOption = Readonly<{
+  value: string;
+  label: string;
+}>;
+
+/**
  * Event payload for the onItemSelect event.
  * Note: We use "onItemSelect" instead of "onSelect" to avoid conflict with
  * React Native's built-in "topSelect" bubbling event.
@@ -21,8 +30,8 @@ export interface SheetPickerDismissEvent {}
  * Used by React Native codegen to generate native bindings.
  */
 export interface NativeSheetPickerProps extends ViewProps {
-  /** JSON string of options array: [{ value: string, label: string }, ...] */
-  options?: string | null;
+  /** Array of options: [{ value: string, label: string }, ...] */
+  options?: ReadonlyArray<NativeSheetPickerOption> | null;
   /** Currently selected value */
   selectedValue?: string | null;
   /** Title displayed at the top of the picker sheet */

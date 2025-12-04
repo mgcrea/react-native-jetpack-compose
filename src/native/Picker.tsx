@@ -1,4 +1,4 @@
-import React, { FunctionComponent, useCallback, useMemo } from "react";
+import React, { FunctionComponent, useCallback } from "react";
 import { StyleSheet, type NativeSyntheticEvent, type StyleProp, type ViewStyle } from "react-native";
 
 import PickerNativeComponent, {
@@ -65,9 +65,6 @@ export const Picker: FunctionComponent<PickerProps> = ({
   style,
   ...props
 }) => {
-  // Serialize items to JSON for native side
-  const itemsJson = useMemo(() => JSON.stringify(items), [items]);
-
   const handleValueChange = useCallback(
     (event: NativeSyntheticEvent<PickerChangeEvent>) => {
       onChange?.(event.nativeEvent.value);
@@ -78,7 +75,7 @@ export const Picker: FunctionComponent<PickerProps> = ({
   return (
     <PickerNativeComponent
       {...props}
-      items={itemsJson}
+      items={items}
       selectedValue={value}
       label={label}
       placeholder={placeholder}

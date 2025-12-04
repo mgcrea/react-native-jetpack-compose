@@ -1,4 +1,4 @@
-import React, { FunctionComponent, useCallback, useMemo } from "react";
+import React, { FunctionComponent, useCallback } from "react";
 import { StyleSheet, type NativeSyntheticEvent, type StyleProp, type ViewStyle } from "react-native";
 
 import SheetPickerNativeComponent, {
@@ -87,9 +87,6 @@ export const SheetPicker: FunctionComponent<SheetPickerProps> = ({
   style,
   ...props
 }) => {
-  // Serialize options to JSON for native side
-  const optionsJson = useMemo(() => JSON.stringify(options), [options]);
-
   const handleSelect = useCallback(
     (event: NativeSyntheticEvent<SheetPickerSelectEvent>) => {
       onSelect?.(event.nativeEvent.value);
@@ -107,7 +104,7 @@ export const SheetPicker: FunctionComponent<SheetPickerProps> = ({
   return (
     <SheetPickerNativeComponent
       {...props}
-      options={optionsJson}
+      options={options}
       selectedValue={value}
       title={title}
       searchPlaceholder={searchPlaceholder}

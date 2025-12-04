@@ -1,5 +1,6 @@
 package com.mgcrea.reactnative.jetpackcompose
 
+import com.facebook.react.bridge.ReadableArray
 import com.facebook.react.module.annotations.ReactModule
 import com.facebook.react.uimanager.SimpleViewManager
 import com.facebook.react.uimanager.ThemedReactContext
@@ -32,7 +33,7 @@ internal class SheetPickerViewManager :
     view.eventDispatcher = UIManagerHelper.getEventDispatcherForReactTag(reactContext, view.id)
   }
 
-  override fun setOptions(view: SheetPickerView, value: String?) {
+  override fun setOptions(view: SheetPickerView, value: ReadableArray?) {
     view.setOptions(value)
   }
 

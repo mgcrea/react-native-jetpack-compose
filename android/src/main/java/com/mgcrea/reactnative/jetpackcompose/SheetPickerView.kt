@@ -40,12 +40,12 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.unit.dp
+import com.facebook.react.bridge.ReadableArray
 import com.facebook.react.uimanager.ThemedReactContext
 import com.mgcrea.reactnative.jetpackcompose.core.InlineComposeView
 import com.mgcrea.reactnative.jetpackcompose.events.DismissEvent
 import com.mgcrea.reactnative.jetpackcompose.events.ItemSelectEvent
 import kotlinx.coroutines.launch
-import org.json.JSONArray
 
 /**
  * Represents a selectable option in the SheetPicker.
@@ -90,8 +90,16 @@ internal class SheetPickerView(reactContext: ThemedReactContext) :
   private var _showSheet by mutableStateOf(false)
 
   // Property setters called by ViewManager
-  fun setOptions(json: String?) {
-    _options.value = json?.let { parseOptions(it) } ?: emptyList()
+  fun setOptions(array: ReadableArray?) {
+    _options.value = array?.let { arr ->
+      List(arr.size()) { i ->
+        val map = arr.getMap(i)
+        SheetPickerOption(
+          value = map?.getString("value") ?: "",
+          label = map?.getString("label") ?: map?.getString("value") ?: ""
+        )
+      }
+    } ?: emptyList()
   }
 
   fun setSelectedValue(value: String?) {
@@ -125,22 +133,6 @@ internal class SheetPickerView(reactContext: ThemedReactContext) :
   override fun onDropInstance() {
     _showSheet = false
     super.onDropInstance()
-  }
-
-  private fun parseOptions(json: String): List<SheetPickerOption> {
-    return try {
-      val jsonArray = JSONArray(json)
-      (0 until jsonArray.length()).map { i ->
-        val obj = jsonArray.getJSONObject(i)
-        SheetPickerOption(
-          value = obj.getString("value"),
-          label = obj.optString("label", obj.getString("value"))
-        )
-      }
-    } catch (e: Exception) {
-      Log.w(TAG, "Failed to parse options: $json", e)
-      emptyList()
-    }
   }
 
   @Composable

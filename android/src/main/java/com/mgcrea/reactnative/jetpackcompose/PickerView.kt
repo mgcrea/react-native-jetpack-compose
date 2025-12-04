@@ -1,6 +1,5 @@
 package com.mgcrea.reactnative.jetpackcompose
 
-import android.util.Log
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -14,10 +13,10 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import com.facebook.react.bridge.ReadableArray
 import com.facebook.react.uimanager.ThemedReactContext
 import com.mgcrea.reactnative.jetpackcompose.core.InlineComposeView
 import com.mgcrea.reactnative.jetpackcompose.events.ValueChangeEvent
-import org.json.JSONArray
 
 @OptIn(ExperimentalMaterial3Api::class)
 internal class PickerView(reactContext: ThemedReactContext) :
@@ -36,8 +35,16 @@ internal class PickerView(reactContext: ThemedReactContext) :
   private var _expanded by mutableStateOf(false)
 
   // Property setters called by ViewManager
-  fun setItems(json: String?) {
-    _items.value = json?.let { parseItems(it) } ?: emptyList()
+  fun setItems(array: ReadableArray?) {
+    _items.value = array?.let { arr ->
+      List(arr.size()) { i ->
+        val map = arr.getMap(i)
+        PickerItem(
+          value = map?.getString("value") ?: "",
+          label = map?.getString("label") ?: map?.getString("value") ?: ""
+        )
+      }
+    } ?: emptyList()
   }
 
   fun setSelectedValue(value: String?) {
@@ -54,22 +61,6 @@ internal class PickerView(reactContext: ThemedReactContext) :
 
   fun setDisabled(value: Boolean) {
     _disabled.value = value
-  }
-
-  private fun parseItems(json: String): List<PickerItem> {
-    return try {
-      val jsonArray = JSONArray(json)
-      (0 until jsonArray.length()).map { i ->
-        val obj = jsonArray.getJSONObject(i)
-        PickerItem(
-          value = obj.getString("value"),
-          label = obj.getString("label")
-        )
-      }
-    } catch (e: Exception) {
-      Log.w(TAG, "Failed to parse items: $json", e)
-      emptyList()
-    }
   }
 
   @Composable

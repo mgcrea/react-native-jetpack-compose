@@ -27,7 +27,7 @@ class ItemSelectEvent(surfaceId: Int, viewId: Int, private val value: String) :
 /**
  * Fired when the picker value changes
  */
-class ValueChangeEvent(surfaceId: Int, viewId: Int, private val value: String) :
+class ValueChangeEvent(surfaceId: Int, viewId: Int, private val value: String, private val index: Int) :
   Event<ValueChangeEvent>(surfaceId, viewId) {
 
   override fun getEventName(): String = EVENT_NAME
@@ -35,6 +35,7 @@ class ValueChangeEvent(surfaceId: Int, viewId: Int, private val value: String) :
   override fun getEventData(): WritableMap =
     Arguments.createMap().apply {
       putString("value", value)
+      putDouble("index", index.toDouble())
     }
 
   companion object {

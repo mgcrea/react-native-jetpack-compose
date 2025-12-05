@@ -64,7 +64,7 @@ internal class PickerView(reactContext: ThemedReactContext) :
   }
 
   @Composable
-  override fun ComposeContent() {
+  override fun Content() {
     val items = _items.value
     val selectedValue = _selectedValue.value
     val label = _label.value
@@ -98,13 +98,13 @@ internal class PickerView(reactContext: ThemedReactContext) :
         expanded = _expanded,
         onDismissRequest = { _expanded = false }
       ) {
-        items.forEach { item ->
+        items.forEachIndexed { index, item ->
           DropdownMenuItem(
             text = { Text(item.label) },
             onClick = {
               _expanded = false
               if (item.value != selectedValue) {
-                dispatchEvent(ValueChangeEvent(getSurfaceId(), id, item.value))
+                dispatchEvent(ValueChangeEvent(getSurfaceId(), id, item.value, index))
               }
             },
             contentPadding = ExposedDropdownMenuDefaults.ItemContentPadding

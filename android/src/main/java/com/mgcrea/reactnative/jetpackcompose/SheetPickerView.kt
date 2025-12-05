@@ -136,7 +136,7 @@ internal class SheetPickerView(reactContext: ThemedReactContext) :
   }
 
   @Composable
-  override fun ComposeContent() {
+  override fun Content() {
     val options = _options.value
     val selectedValue = _selectedValue.value
     val disabled = _disabled.value

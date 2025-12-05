@@ -73,9 +73,10 @@ abstract class InlineComposeView(
   override fun onAttachedToWindow() {
     super.onAttachedToWindow()
     Log.d(tag, "onAttachedToWindow: lifecycle=${lifecycleRegistry.currentState}, composeView=${composeView != null}, isDetached=$isDetached, id=$id")
-    // Resume lifecycle - handle CREATED, STARTED, or STOPPED states
+    // Resume lifecycle - after ON_STOP event, state goes back to CREATED
+    // So we need to restart from CREATED state when reattaching
     val state = lifecycleRegistry.currentState
-    if (state == Lifecycle.State.CREATED || state == Lifecycle.State.STOPPED) {
+    if (state == Lifecycle.State.CREATED) {
       lifecycleRegistry.handleLifecycleEvent(Lifecycle.Event.ON_START)
       Log.d(tag, "onAttachedToWindow: transitioned to STARTED from $state")
     }

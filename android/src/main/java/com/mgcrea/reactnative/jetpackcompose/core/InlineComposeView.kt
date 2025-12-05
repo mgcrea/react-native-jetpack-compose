@@ -1,6 +1,5 @@
 package com.mgcrea.reactnative.jetpackcompose.core
 
-import android.util.Log
 import android.view.View.MeasureSpec
 import android.widget.FrameLayout
 import androidx.compose.runtime.Composable
@@ -31,7 +30,7 @@ import kotlinx.coroutines.launch
  * React Native's view hierarchy. Creates its own LifecycleOwner since
  * ReactActivity is not a ComponentActivity.
  *
- * Subclasses implement [Content] to provide the Composable content.
+ * Subclasses implement [ComposeContent] to provide the Composable content.
  */
 abstract class InlineComposeView(
   protected val reactContext: ThemedReactContext,
@@ -67,28 +66,26 @@ abstract class InlineComposeView(
   init {
     savedStateRegistryController.performRestore(null)
     lifecycleRegistry.handleLifecycleEvent(Lifecycle.Event.ON_CREATE)
-    Log.d(tag, "init: lifecycle=${lifecycleRegistry.currentState}, id=$id")
   }
 
   override fun onAttachedToWindow() {
     super.onAttachedToWindow()
-    Log.d(tag, "onAttachedToWindow: lifecycle=${lifecycleRegistry.currentState}, composeView=${composeView != null}, isDetached=$isDetached, id=$id")
     // Resume lifecycle - after ON_STOP event, state goes back to CREATED
-    // So we need to restart from CREATED state when reattaching
     val state = lifecycleRegistry.currentState
     if (state == Lifecycle.State.CREATED) {
       lifecycleRegistry.handleLifecycleEvent(Lifecycle.Event.ON_START)
-      Log.d(tag, "onAttachedToWindow: transitioned to STARTED from $state")
     }
     if (lifecycleRegistry.currentState == Lifecycle.State.STARTED) {
       lifecycleRegistry.handleLifecycleEvent(Lifecycle.Event.ON_RESUME)
-      Log.d(tag, "onAttachedToWindow: transitioned to RESUMED")
     }
+    // Set up ComposeView only once, on first attach
     if (composeView == null) {
-      Log.d(tag, "onAttachedToWindow: setting up ComposeView")
-      setupComposeView()
-    } else {
-      Log.d(tag, "onAttachedToWindow: ComposeView already exists, skipping setup")
+      // Post to ensure we're fully attached and window is ready
+      post {
+        if (isAttachedToWindow) {
+          setupComposeView()
+        }
+      }
     }
   }
 
@@ -107,7 +104,6 @@ abstract class InlineComposeView(
   }
 
   private fun setupComposeView() {
-    Log.d(tag, "setupComposeView: starting setup, id=$id")
     // Set lifecycle owners on this view so ComposeView can find them
     setViewTreeLifecycleOwner(this)
     setViewTreeSavedStateRegistryOwner(this)
@@ -128,7 +124,18 @@ abstract class InlineComposeView(
       setContent { ComposeContent() }
     }
     addView(composeView, LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.WRAP_CONTENT))
-    Log.d(tag, "setupComposeView: completed, id=$id")
+
+    // Manually measure and layout the ComposeView using this view's current dimensions
+    // This is necessary because React Native doesn't always trigger onLayout after adding child views
+    val width = measuredWidth
+    val height = measuredHeight
+    if (width > 0 && height > 0) {
+      composeView?.measure(
+        MeasureSpec.makeMeasureSpec(width, MeasureSpec.EXACTLY),
+        MeasureSpec.makeMeasureSpec(height, MeasureSpec.AT_MOST)
+      )
+      composeView?.layout(0, 0, width, composeView?.measuredHeight ?: 0)
+    }
   }
 
   /**
@@ -136,7 +143,6 @@ abstract class InlineComposeView(
    * Performs early cleanup to prevent use-after-free crashes in C++ props destructors.
    */
   open fun onDropInstance() {
-    Log.d(tag, "onDropInstance: lifecycle=${lifecycleRegistry.currentState}, id=$id")
     // Set detached flag first to prevent use-after-free crashes
     isDetached = true
     // Clear event dispatcher to prevent events during cleanup
@@ -149,16 +155,13 @@ abstract class InlineComposeView(
       removeView(it)
       composeView = null
     }
-    Log.d(tag, "onDropInstance: completed cleanup, id=$id")
   }
 
   override fun onDetachedFromWindow() {
-    Log.d(tag, "onDetachedFromWindow: lifecycle=${lifecycleRegistry.currentState}, id=$id")
     // Skip lifecycle transitions if already destroyed (after onDropInstance)
     if (lifecycleRegistry.currentState != Lifecycle.State.DESTROYED) {
       lifecycleRegistry.handleLifecycleEvent(Lifecycle.Event.ON_PAUSE)
       lifecycleRegistry.handleLifecycleEvent(Lifecycle.Event.ON_STOP)
-      Log.d(tag, "onDetachedFromWindow: lifecycle now ${lifecycleRegistry.currentState}")
     }
     // Don't destroy on detach - view might be reattached during navigation
     // Full cleanup only happens in onDropInstance

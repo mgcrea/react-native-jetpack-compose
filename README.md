@@ -16,6 +16,7 @@ Material 3 components for React Native, powered by Jetpack Compose. This library
 ## Requirements
 
 - React Native 0.76+ (New Architecture required)
+- Kotlin 2.0+ (for Compose compiler plugin)
 - Android SDK 24+ (minSdk)
 - Android SDK 35+ (compileSdk)
 

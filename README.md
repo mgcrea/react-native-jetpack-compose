@@ -12,6 +12,7 @@ Material 3 components for React Native, powered by Jetpack Compose. This library
 - **Picker** - A dropdown picker using ExposedDropdownMenuBox
 - **SheetPicker** - A searchable picker that opens in a modal bottom sheet
 - **ModalBottomSheet** - A Material 3 modal bottom sheet with gesture support
+- **TextField** - A Material 3 OutlinedTextField with label, error state, and more
 
 ## Requirements
 
@@ -231,6 +232,53 @@ function MyComponent() {
 | `onDismiss`      | `() => void`           | -       | Called when sheet is dismissed      |
 | `children`       | `ReactNode`            | -       | Content to render inside            |
 | `style`          | `StyleProp<ViewStyle>` | -       | Custom styles                       |
+
+### TextField
+
+A Material 3 OutlinedTextField for text input with floating labels, error states, and helper text.
+
+```tsx
+import { useState } from "react";
+import { TextField } from "@mgcrea/react-native-jetpack-compose";
+
+function MyComponent() {
+  const [email, setEmail] = useState("");
+  const [error, setError] = useState(false);
+
+  return (
+    <TextField
+      value={email}
+      label="Email"
+      placeholder="Enter your email"
+      error={error}
+      helperText={error ? "Invalid email address" : undefined}
+      onChange={(text) => {
+        setEmail(text);
+        setError(!text.includes("@"));
+      }}
+    />
+  );
+}
+```
+
+#### Props
+
+| Prop              | Type                   | Default | Description                          |
+| ----------------- | ---------------------- | ------- | ------------------------------------ |
+| `value`           | `string`               | -       | Current text value                   |
+| `label`           | `string`               | -       | Floating label text                  |
+| `placeholder`     | `string`               | -       | Placeholder when empty               |
+| `disabled`        | `boolean`              | `false` | Whether the field is disabled        |
+| `editable`        | `boolean`              | `true`  | Whether text can be edited           |
+| `multiline`       | `boolean`              | `false` | Enable multiline input               |
+| `maxLength`       | `number`               | -       | Maximum character count              |
+| `secureTextEntry` | `boolean`              | `false` | Hide text for password fields        |
+| `error`           | `boolean`              | `false` | Show error state styling             |
+| `helperText`      | `string`               | -       | Helper or error text below field     |
+| `onChange`        | `(text: string) => void` | -     | Called when text changes             |
+| `onFocus`         | `() => void`           | -       | Called when field gains focus        |
+| `onBlur`          | `() => void`           | -       | Called when field loses focus        |
+| `style`           | `StyleProp<ViewStyle>` | -       | Custom styles                        |
 
 ## Theming
 

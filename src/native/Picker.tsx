@@ -9,12 +9,12 @@ import PickerNativeComponent, {
 /**
  * Represents a selectable item in the Picker component.
  */
-export interface PickerItem {
+export type PickerItem = {
   /** Unique value for this item (used in onChange callback) */
   value: string;
   /** Display label shown in the dropdown */
   label: string;
-}
+};
 
 /**
  * Props for the Picker component.

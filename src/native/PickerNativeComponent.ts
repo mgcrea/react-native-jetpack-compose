@@ -1,6 +1,7 @@
+/* eslint-disable @typescript-eslint/array-type */
 /* eslint-disable @typescript-eslint/consistent-type-definitions */
 import { codegenNativeComponent, type HostComponent, type ViewProps } from "react-native";
-import type { DirectEventHandler } from "react-native/Libraries/Types/CodegenTypes";
+import type { DirectEventHandler, Double } from "react-native/Libraries/Types/CodegenTypes";
 
 /**
  * Item type for the Picker.
@@ -14,9 +15,10 @@ export type NativePickerItem = Readonly<{
 /**
  * Event payload for the onValueChange event.
  */
-export interface PickerChangeEvent {
+export type PickerChangeEvent = Readonly<{
   value: string;
-}
+  index: Double;
+}>;
 
 /**
  * Native props for the Picker component.

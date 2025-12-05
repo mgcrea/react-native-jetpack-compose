@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-empty-object-type */
 /* eslint-disable @typescript-eslint/consistent-type-definitions */
 import { codegenNativeComponent, type HostComponent, type ViewProps } from "react-native";
 import type { DirectEventHandler, Double } from "react-native/Libraries/Types/CodegenTypes";

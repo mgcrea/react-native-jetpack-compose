@@ -1,4 +1,4 @@
-import React, { FunctionComponent, useCallback } from "react";
+import React, { useCallback, type FunctionComponent } from "react";
 import { StyleSheet, type NativeSyntheticEvent, type StyleProp, type ViewStyle } from "react-native";
 
 import SheetPickerNativeComponent, {
@@ -10,12 +10,12 @@ import SheetPickerNativeComponent, {
 /**
  * Represents a selectable option in the SheetPicker component.
  */
-export interface SheetPickerOption {
+export type SheetPickerOption = {
   /** Unique value for this option (used in onChange callback) */
   value: string;
   /** Display label shown in the list */
   label: string;
-}
+};
 
 /**
  * Props for the SheetPicker component.

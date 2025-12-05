@@ -1,6 +1,6 @@
 {
   "name": "@mgcrea/react-native-jetpack-compose",
-  "version": "0.2.1",
+  "version": "0.3.0",
   "description": "Material 3 components for React Native, powered by Jetpack Compose",
   "author": "Olivier Louvignes <olivier@mgcrea.io> (https://github.com/mgcrea)",
   "homepage": "https://github.com/mgcrea/react-native-jetpack-compose#readme",

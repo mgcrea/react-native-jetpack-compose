@@ -232,6 +232,41 @@ function MyComponent() {
 | `children`       | `ReactNode`            | -       | Content to render inside            |
 | `style`          | `StyleProp<ViewStyle>` | -       | Custom styles                       |
 
+## Theming
+
+All components inherit their colors from Material 3's `MaterialTheme`. To customize colors (including outline colors, primary colors, etc.), wrap your Compose content with a custom theme in your Android app.
+
+### Using XML Themes
+
+The simplest approach is to customize your app's Material 3 theme in `res/values/themes.xml`:
+
+```xml
+<style name="Theme.MyApp" parent="Theme.Material3.DayNight">
+    <!-- Primary brand color -->
+    <item name="colorPrimary">@color/my_primary</item>
+    <!-- Outline color for text fields -->
+    <item name="colorOutline">@color/my_outline</item>
+    <!-- Focused outline color -->
+    <item name="colorPrimaryContainer">@color/my_primary_container</item>
+    <!-- Error color -->
+    <item name="colorError">@color/my_error</item>
+</style>
+```
+
+### Common Color Attributes
+
+| Attribute                | Affects                                           |
+| ------------------------ | ------------------------------------------------- |
+| `colorPrimary`           | Focused outline, selected states, buttons         |
+| `colorOutline`           | Default (unfocused) outline color                 |
+| `colorOutlineVariant`    | Subtle outlines and dividers                      |
+| `colorError`             | Error state outline and text                      |
+| `colorSurface`           | Background of text fields and dialogs             |
+| `colorOnSurface`         | Text and icon colors                              |
+| `colorOnSurfaceVariant`  | Placeholder and label colors                      |
+
+For a complete list of Material 3 color attributes, see the [Material 3 Color System documentation](https://m3.material.io/styles/color/system).
+
 ## Example
 
 Check out the [example app](./example) for a complete demo:

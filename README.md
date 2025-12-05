@@ -182,18 +182,20 @@ function MyComponent() {
 
 #### Props
 
-| Prop                | Type                      | Default | Description                      |
-| ------------------- | ------------------------- | ------- | -------------------------------- |
-| `options`           | `SheetPickerOption[]`     | -       | Array of `{ value, label }`      |
-| `value`             | `string \| null`          | -       | Currently selected value         |
-| `label`             | `string`                  | -       | Floating label text              |
-| `placeholder`       | `string`                  | -       | Placeholder when no selection    |
-| `title`             | `string`                  | -       | Title at top of the sheet        |
-| `searchPlaceholder` | `string`                  | -       | Placeholder for search field     |
-| `autoDismiss`       | `boolean`                 | `true`  | Auto-close sheet after selection |
-| `disabled`          | `boolean`                 | `false` | Whether the picker is disabled   |
-| `onSelect`          | `(value: string) => void` | -       | Called when an option is selected|
-| `onDismiss`         | `() => void`              | -       | Called when sheet is dismissed   |
+| Prop                | Type                      | Default | Description                         |
+| ------------------- | ------------------------- | ------- | ----------------------------------- |
+| `options`           | `SheetPickerOption[]`     | -       | Array of `{ value, label }`         |
+| `value`             | `string \| null`          | -       | Currently selected value            |
+| `label`             | `string`                  | -       | Floating label text                 |
+| `placeholder`       | `string`                  | -       | Placeholder when no selection       |
+| `title`             | `string`                  | -       | Title at top of the sheet           |
+| `searchPlaceholder` | `string`                  | -       | Placeholder for search field        |
+| `autoDismiss`       | `boolean`                 | `true`  | Auto-close sheet after selection    |
+| `maxHeightRatio`    | `number`                  | `0.9`   | Max height as ratio of screen (0-1) |
+| `sheetMaxWidth`     | `number`                  | -       | Max width of sheet in dp (centered) |
+| `disabled`          | `boolean`                 | `false` | Whether the picker is disabled      |
+| `onSelect`          | `(value: string) => void` | -       | Called when an option is selected   |
+| `onDismiss`         | `() => void`              | -       | Called when sheet is dismissed      |
 
 ### ModalBottomSheet
 

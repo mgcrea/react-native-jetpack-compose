@@ -1,7 +1,7 @@
 {
   "name": "@mgcrea/react-native-jetpack-compose",
-  "version": "0.10.0",
-  "description": "Jetpack Compose components for React Native",
+  "version": "0.2.0",
+  "description": "Material 3 components for React Native, powered by Jetpack Compose",
   "author": "Olivier Louvignes <olivier@mgcrea.io> (https://github.com/mgcrea)",
   "homepage": "https://github.com/mgcrea/react-native-jetpack-compose#readme",
   "repository": "github:mgcrea/react-native-jetpack-compose",
@@ -13,7 +13,7 @@
     "src",
     "dist",
     "android",
-    "react-native.config.cjs"
+    "react-native.config.js"
   ],
   "scripts": {
     "dev": "cd example; npm run dev",

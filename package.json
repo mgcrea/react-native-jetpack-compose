@@ -6,9 +6,16 @@
   "homepage": "https://github.com/mgcrea/react-native-jetpack-compose#readme",
   "repository": "github:mgcrea/react-native-jetpack-compose",
   "license": "MIT",
-  "type": "module",
+  "type": "commonjs",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "require": "./dist/index.js",
+      "default": "./dist/index.js"
+    }
+  },
   "files": [
     "src",
     "dist",
@@ -30,8 +37,8 @@
     "prepare": "npm run build"
   },
   "peerDependencies": {
-    "react": "*",
-    "react-native": "*"
+    "react": ">=18.2.0",
+    "react-native": ">=0.76.0"
   },
   "devDependencies": {
     "@babel/cli": "^7.28.3",

@@ -77,7 +77,7 @@ internal class TextFieldView(reactContext: ThemedReactContext) :
   }
 
   @Composable
-  override fun Content() {
+  override fun ComposeContent() {
     val value = _value.value
     val label = _label.value
     val placeholder = _placeholder.value

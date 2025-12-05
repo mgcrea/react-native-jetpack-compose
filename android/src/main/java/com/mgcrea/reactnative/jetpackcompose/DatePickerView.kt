@@ -123,7 +123,7 @@ internal class DatePickerView(reactContext: ThemedReactContext) :
   }
 
   @Composable
-  override fun Content() {
+  override fun ComposeContent() {
     val disabled = _disabled.value
     val label = _label.value
     val placeholder = _placeholder.value

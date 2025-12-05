@@ -64,7 +64,7 @@ internal class PickerView(reactContext: ThemedReactContext) :
   }
 
   @Composable
-  override fun Content() {
+  override fun ComposeContent() {
     val items = _items.value
     val selectedValue = _selectedValue.value
     val label = _label.value

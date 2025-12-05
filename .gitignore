@@ -12,6 +12,7 @@ tmp/
 *.private.tsx
 
 example/
+reproducer/
 docs/
 
 CLAUDE.md

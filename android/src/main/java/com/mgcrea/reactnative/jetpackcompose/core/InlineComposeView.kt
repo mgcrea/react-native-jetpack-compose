@@ -70,8 +70,13 @@ abstract class InlineComposeView(
 
   override fun onAttachedToWindow() {
     super.onAttachedToWindow()
-    lifecycleRegistry.handleLifecycleEvent(Lifecycle.Event.ON_START)
-    lifecycleRegistry.handleLifecycleEvent(Lifecycle.Event.ON_RESUME)
+    // Resume lifecycle if we were paused
+    if (lifecycleRegistry.currentState == Lifecycle.State.CREATED) {
+      lifecycleRegistry.handleLifecycleEvent(Lifecycle.Event.ON_START)
+    }
+    if (lifecycleRegistry.currentState == Lifecycle.State.STARTED) {
+      lifecycleRegistry.handleLifecycleEvent(Lifecycle.Event.ON_RESUME)
+    }
     if (composeView == null) {
       setupComposeView()
     }
@@ -123,16 +128,7 @@ abstract class InlineComposeView(
     isDetached = true
     // Clear event dispatcher to prevent events during cleanup
     eventDispatcher = null
-  }
-
-  override fun onDetachedFromWindow() {
-    // Ensure cleanup is done even if onDropInstance wasn't called
-    if (!isDetached) {
-      isDetached = true
-      eventDispatcher = null
-    }
-    lifecycleRegistry.handleLifecycleEvent(Lifecycle.Event.ON_PAUSE)
-    lifecycleRegistry.handleLifecycleEvent(Lifecycle.Event.ON_STOP)
+    // Full lifecycle cleanup
     lifecycleRegistry.handleLifecycleEvent(Lifecycle.Event.ON_DESTROY)
     recomposerScope?.cancel()
     recomposerScope = null
@@ -140,6 +136,13 @@ abstract class InlineComposeView(
       removeView(it)
       composeView = null
     }
+  }
+
+  override fun onDetachedFromWindow() {
+    lifecycleRegistry.handleLifecycleEvent(Lifecycle.Event.ON_PAUSE)
+    lifecycleRegistry.handleLifecycleEvent(Lifecycle.Event.ON_STOP)
+    // Don't destroy on detach - view might be reattached during navigation
+    // Full cleanup only happens in onDropInstance
     super.onDetachedFromWindow()
   }
 

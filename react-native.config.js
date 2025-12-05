@@ -1,3 +1,9 @@
-import config from './react-native.config.cjs';
-
-export default config;
+export default {
+  dependency: {
+    platforms: {
+      android: {
+        cmakeListsPath: "src/main/jni/CMakeLists.txt",
+      },
+    },
+  },
+};

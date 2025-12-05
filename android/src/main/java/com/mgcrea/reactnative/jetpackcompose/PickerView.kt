@@ -27,7 +27,7 @@ internal class PickerView(reactContext: ThemedReactContext) :
   }
 
   // State backing for Compose
-  private val _items = mutableStateOf<List<PickerItem>>(emptyList())
+  private val _items = mutableStateOf<List<PickerOption>>(emptyList())
   private val _selectedValue = mutableStateOf<String?>(null)
   private val _label = mutableStateOf<String?>(null)
   private val _placeholder = mutableStateOf<String?>(null)
@@ -39,7 +39,7 @@ internal class PickerView(reactContext: ThemedReactContext) :
     _items.value = array?.let { arr ->
       List(arr.size()) { i ->
         val map = arr.getMap(i)
-        PickerItem(
+        PickerOption(
           value = map?.getString("value") ?: "",
           label = map?.getString("label") ?: map?.getString("value") ?: ""
         )
@@ -114,5 +114,5 @@ internal class PickerView(reactContext: ThemedReactContext) :
     }
   }
 
-  data class PickerItem(val value: String, val label: String)
+  data class PickerOption(val value: String, val label: String)
 }

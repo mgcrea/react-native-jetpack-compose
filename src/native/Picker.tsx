@@ -7,9 +7,9 @@ import PickerNativeComponent, {
 } from "./PickerNativeComponent";
 
 /**
- * Represents a selectable item in the Picker component.
+ * Represents a selectable option in the Picker component.
  */
-export type PickerItem = {
+export type PickerOption = {
   /** Unique value for this item (used in onChange callback) */
   value: string;
   /** Display label shown in the dropdown */
@@ -20,8 +20,8 @@ export type PickerItem = {
  * Props for the Picker component.
  */
 export type PickerProps = Omit<NativePickerProps, "items" | "selectedValue" | "disabled" | "onValueChange"> & {
-  /** Array of selectable items */
-  items: PickerItem[];
+  /** Array of selectable options */
+  options: PickerOption[];
   /** Currently selected value */
   value?: string | null;
   /** Floating label text */
@@ -47,7 +47,7 @@ export type PickerProps = Omit<NativePickerProps, "items" | "selectedValue" | "d
  * ];
  *
  * <Picker
- *   items={countries}
+ *   options={countries}
  *   value={country}
  *   label="Country"
  *   placeholder="Select a country"
@@ -56,7 +56,7 @@ export type PickerProps = Omit<NativePickerProps, "items" | "selectedValue" | "d
  * ```
  */
 export const Picker: FunctionComponent<PickerProps> = ({
-  items,
+  options,
   value,
   label,
   placeholder,
@@ -75,7 +75,7 @@ export const Picker: FunctionComponent<PickerProps> = ({
   return (
     <PickerNativeComponent
       {...props}
-      items={items}
+      items={options}
       selectedValue={value}
       label={label}
       placeholder={placeholder}

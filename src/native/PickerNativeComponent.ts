@@ -4,10 +4,10 @@ import { codegenNativeComponent, type HostComponent, type ViewProps } from "reac
 import type { DirectEventHandler, Double } from "react-native/Libraries/Types/CodegenTypes";
 
 /**
- * Item type for the Picker.
+ * Option type for the Picker.
  * Using Readonly types for codegen compatibility.
  */
-export type NativePickerItem = Readonly<{
+export type NativePickerOption = Readonly<{
   value: string;
   label: string;
 }>;
@@ -25,8 +25,8 @@ export type PickerChangeEvent = Readonly<{
  * Used by React Native codegen to generate native bindings.
  */
 export interface NativePickerProps extends ViewProps {
-  /** Array of items: [{ value: string, label: string }, ...] */
-  items?: ReadonlyArray<NativePickerItem> | null;
+  /** Array of options: [{ value: string, label: string }, ...] */
+  items?: ReadonlyArray<NativePickerOption> | null;
   /** Currently selected value */
   selectedValue?: string | null;
   /** Floating label text */

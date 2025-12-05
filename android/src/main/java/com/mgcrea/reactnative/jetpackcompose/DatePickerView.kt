@@ -169,8 +169,21 @@ internal class DatePickerView(reactContext: ThemedReactContext) :
       selectableDates = selectableDates
     )
 
-    // Track selection changes
+    // Sync props to picker state when props change from JS
+    LaunchedEffect(_selectedDateMillis.value) {
+      val propValue = _selectedDateMillis.value
+      if (propValue != datePickerState.selectedDateMillis) {
+        datePickerState.selectedDateMillis = propValue
+      }
+    }
+
+    // Track selection changes and dispatch to JS
+    var isFirstComposition by remember { mutableStateOf(true) }
     LaunchedEffect(datePickerState.selectedDateMillis) {
+      if (isFirstComposition) {
+        isFirstComposition = false
+        return@LaunchedEffect
+      }
       datePickerState.selectedDateMillis?.let { millis ->
         dispatchEvent(DateChangeEvent(getSurfaceId(), id, millis))
       }
@@ -188,9 +201,10 @@ internal class DatePickerView(reactContext: ThemedReactContext) :
     }
 
     // OutlinedTextField that shows selected date
+    // When dialog is open, show picker state; otherwise show prop value
     OutlinedTextField(
       modifier = Modifier.fillMaxWidth(),
-      value = formatDate(_selectedDateMillis.value),
+      value = formatDate(if (_showDialog) datePickerState.selectedDateMillis else _selectedDateMillis.value),
       onValueChange = {},
       readOnly = true,
       singleLine = true,

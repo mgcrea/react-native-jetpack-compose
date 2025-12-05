@@ -97,7 +97,7 @@ export const TextField: FunctionComponent<TextFieldProps> = ({
   }, [onBlur]);
 
   // Calculate minHeight based on content
-  const baseHeight = 56;
+  const baseHeight = 64;
   const helperTextHeight = helperText ? 20 : 0;
   const multilineExtraHeight = multiline ? 48 : 0; // ~2 extra lines
   const minHeight = baseHeight + helperTextHeight + multilineExtraHeight;

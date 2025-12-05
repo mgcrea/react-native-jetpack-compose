@@ -1,5 +1,6 @@
 package com.mgcrea.reactnative.jetpackcompose.core
 
+import android.util.Log
 import android.view.View.MeasureSpec
 import android.widget.FrameLayout
 import androidx.compose.runtime.Composable
@@ -66,19 +67,27 @@ abstract class InlineComposeView(
   init {
     savedStateRegistryController.performRestore(null)
     lifecycleRegistry.handleLifecycleEvent(Lifecycle.Event.ON_CREATE)
+    Log.d(tag, "init: lifecycle=${lifecycleRegistry.currentState}, id=$id")
   }
 
   override fun onAttachedToWindow() {
     super.onAttachedToWindow()
-    // Resume lifecycle if we were paused
-    if (lifecycleRegistry.currentState == Lifecycle.State.CREATED) {
+    Log.d(tag, "onAttachedToWindow: lifecycle=${lifecycleRegistry.currentState}, composeView=${composeView != null}, isDetached=$isDetached, id=$id")
+    // Resume lifecycle - handle CREATED, STARTED, or STOPPED states
+    val state = lifecycleRegistry.currentState
+    if (state == Lifecycle.State.CREATED || state == Lifecycle.State.STOPPED) {
       lifecycleRegistry.handleLifecycleEvent(Lifecycle.Event.ON_START)
+      Log.d(tag, "onAttachedToWindow: transitioned to STARTED from $state")
     }
     if (lifecycleRegistry.currentState == Lifecycle.State.STARTED) {
       lifecycleRegistry.handleLifecycleEvent(Lifecycle.Event.ON_RESUME)
+      Log.d(tag, "onAttachedToWindow: transitioned to RESUMED")
     }
     if (composeView == null) {
+      Log.d(tag, "onAttachedToWindow: setting up ComposeView")
       setupComposeView()
+    } else {
+      Log.d(tag, "onAttachedToWindow: ComposeView already exists, skipping setup")
     }
   }
 
@@ -97,6 +106,7 @@ abstract class InlineComposeView(
   }
 
   private fun setupComposeView() {
+    Log.d(tag, "setupComposeView: starting setup, id=$id")
     // Set lifecycle owners on this view so ComposeView can find them
     setViewTreeLifecycleOwner(this)
     setViewTreeSavedStateRegistryOwner(this)
@@ -117,6 +127,7 @@ abstract class InlineComposeView(
       setContent { ComposeContent() }
     }
     addView(composeView, LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.WRAP_CONTENT))
+    Log.d(tag, "setupComposeView: completed, id=$id")
   }
 
   /**
@@ -124,6 +135,7 @@ abstract class InlineComposeView(
    * Performs early cleanup to prevent use-after-free crashes in C++ props destructors.
    */
   open fun onDropInstance() {
+    Log.d(tag, "onDropInstance: lifecycle=${lifecycleRegistry.currentState}, id=$id")
     // Set detached flag first to prevent use-after-free crashes
     isDetached = true
     // Clear event dispatcher to prevent events during cleanup
@@ -136,11 +148,17 @@ abstract class InlineComposeView(
       removeView(it)
       composeView = null
     }
+    Log.d(tag, "onDropInstance: completed cleanup, id=$id")
   }
 
   override fun onDetachedFromWindow() {
-    lifecycleRegistry.handleLifecycleEvent(Lifecycle.Event.ON_PAUSE)
-    lifecycleRegistry.handleLifecycleEvent(Lifecycle.Event.ON_STOP)
+    Log.d(tag, "onDetachedFromWindow: lifecycle=${lifecycleRegistry.currentState}, id=$id")
+    // Skip lifecycle transitions if already destroyed (after onDropInstance)
+    if (lifecycleRegistry.currentState != Lifecycle.State.DESTROYED) {
+      lifecycleRegistry.handleLifecycleEvent(Lifecycle.Event.ON_PAUSE)
+      lifecycleRegistry.handleLifecycleEvent(Lifecycle.Event.ON_STOP)
+      Log.d(tag, "onDetachedFromWindow: lifecycle now ${lifecycleRegistry.currentState}")
+    }
     // Don't destroy on detach - view might be reattached during navigation
     // Full cleanup only happens in onDropInstance
     super.onDetachedFromWindow()

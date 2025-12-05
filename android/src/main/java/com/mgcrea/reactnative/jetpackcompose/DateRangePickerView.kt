@@ -181,11 +181,26 @@ internal class DateRangePickerView(reactContext: ThemedReactContext) :
       selectableDates = selectableDates
     )
 
-    // Track selection changes
+    // Sync props to picker state when props change from JS
+    LaunchedEffect(_startDateMillis.value, _endDateMillis.value) {
+      val startProp = _startDateMillis.value
+      val endProp = _endDateMillis.value
+      if (startProp != dateRangePickerState.selectedStartDateMillis ||
+          endProp != dateRangePickerState.selectedEndDateMillis) {
+        dateRangePickerState.setSelection(startProp, endProp)
+      }
+    }
+
+    // Track selection changes and dispatch to JS (skip first composition)
+    var isFirstComposition by remember { mutableStateOf(true) }
     LaunchedEffect(
       dateRangePickerState.selectedStartDateMillis,
       dateRangePickerState.selectedEndDateMillis
     ) {
+      if (isFirstComposition) {
+        isFirstComposition = false
+        return@LaunchedEffect
+      }
       dispatchEvent(DateRangeChangeEvent(
         getSurfaceId(),
         id,
@@ -206,9 +221,13 @@ internal class DateRangePickerView(reactContext: ThemedReactContext) :
     }
 
     // OutlinedTextField that shows selected date range
+    // When dialog is open, show picker state; otherwise show prop value
     OutlinedTextField(
       modifier = Modifier.fillMaxWidth(),
-      value = formatDateRange(_startDateMillis.value, _endDateMillis.value),
+      value = formatDateRange(
+        if (_showDialog) dateRangePickerState.selectedStartDateMillis else _startDateMillis.value,
+        if (_showDialog) dateRangePickerState.selectedEndDateMillis else _endDateMillis.value
+      ),
       onValueChange = {},
       readOnly = true,
       singleLine = true,
@@ -232,9 +251,12 @@ internal class DateRangePickerView(reactContext: ThemedReactContext) :
           TextButton(
             onClick = {
               _showDialog = false
-              val startMillis = dateRangePickerState.selectedStartDateMillis ?: 0L
-              val endMillis = dateRangePickerState.selectedEndDateMillis ?: 0L
-              dispatchEvent(RangeConfirmEvent(getSurfaceId(), id, startMillis, endMillis))
+              val startMillis = dateRangePickerState.selectedStartDateMillis
+              val endMillis = dateRangePickerState.selectedEndDateMillis
+              // Only dispatch confirm event when both dates are selected
+              if (startMillis != null && endMillis != null) {
+                dispatchEvent(RangeConfirmEvent(getSurfaceId(), id, startMillis, endMillis))
+              }
             }
           ) {
             Text(_confirmLabel.value ?: "OK")

@@ -8,13 +8,12 @@ import androidx.compose.foundation.interaction.PressInteraction
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.statusBars
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -42,6 +41,8 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.platform.LocalConfiguration
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.facebook.react.bridge.ReadableArray
 import com.facebook.react.uimanager.ThemedReactContext
@@ -83,6 +84,8 @@ internal class SheetPickerView(reactContext: ThemedReactContext) :
   private val _title = mutableStateOf<String?>(null)
   private val _searchPlaceholder = mutableStateOf("Search")
   private val _autoDismiss = mutableStateOf(true)
+  private val _maxHeightRatio = mutableStateOf(0.9f)
+  private val _sheetMaxWidth = mutableStateOf<Float?>(null)
 
   // New state for OutlinedTextField
   private val _label = mutableStateOf<String?>(null)
@@ -121,6 +124,14 @@ internal class SheetPickerView(reactContext: ThemedReactContext) :
     _autoDismiss.value = value
   }
 
+  fun setMaxHeightRatio(value: Double) {
+    _maxHeightRatio.value = value.toFloat()
+  }
+
+  fun setSheetMaxWidth(value: Double) {
+    _sheetMaxWidth.value = value.toFloat()
+  }
+
   fun setLabel(value: String?) {
     _label.value = value
   }
@@ -148,6 +159,13 @@ internal class SheetPickerView(reactContext: ThemedReactContext) :
     val title = _title.value
     val searchPlaceholder = _searchPlaceholder.value
     val autoDismiss = _autoDismiss.value
+    val maxHeightRatio = _maxHeightRatio.value
+    val sheetMaxWidth = _sheetMaxWidth.value
+
+    // Calculate max height based on screen height and ratio
+    val configuration = LocalConfiguration.current
+    val maxSheetHeight = (configuration.screenHeightDp * maxHeightRatio).dp
+    val sheetMaxWidthDp = sheetMaxWidth?.dp ?: Dp.Unspecified
 
     // Local search state
     var searchText by remember { mutableStateOf("") }
@@ -211,11 +229,12 @@ internal class SheetPickerView(reactContext: ThemedReactContext) :
           dispatchEvent(DismissEvent(getSurfaceId(), id))
         },
         sheetState = sheetState,
-        contentWindowInsets = { WindowInsets.statusBars }
+        sheetMaxWidth = sheetMaxWidthDp
       ) {
         Column(
           modifier = Modifier
             .fillMaxWidth()
+            .heightIn(max = maxSheetHeight)
             .padding(horizontal = 16.dp)
             .navigationBarsPadding()
         ) {

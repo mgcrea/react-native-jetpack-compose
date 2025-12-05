@@ -53,6 +53,14 @@ internal class SheetPickerViewManager :
     view.setAutoDismiss(value)
   }
 
+  override fun setMaxHeightRatio(view: SheetPickerView, value: Double) {
+    view.setMaxHeightRatio(value)
+  }
+
+  override fun setSheetMaxWidth(view: SheetPickerView, value: Double) {
+    view.setSheetMaxWidth(value)
+  }
+
   override fun setLabel(view: SheetPickerView, value: String?) {
     view.setLabel(value)
   }

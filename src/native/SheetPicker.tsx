@@ -22,7 +22,7 @@ export type SheetPickerOption = {
  */
 export type SheetPickerProps = Omit<
   NativeSheetPickerProps,
-  "options" | "selectedValue" | "autoDismiss" | "disabled" | "onItemSelect" | "onDismiss"
+  "options" | "selectedValue" | "autoDismiss" | "maxHeightRatio" | "sheetMaxWidth" | "disabled" | "onItemSelect" | "onDismiss"
 > & {
   /** Array of selectable options */
   options: SheetPickerOption[];
@@ -34,6 +34,10 @@ export type SheetPickerProps = Omit<
   searchPlaceholder?: string;
   /** Whether to automatically dismiss the sheet after selection. Defaults to true. */
   autoDismiss?: boolean;
+  /** Maximum height of the sheet as a ratio of screen height (0-1). Defaults to 0.9. */
+  maxHeightRatio?: number;
+  /** Maximum width of the sheet in dp. When set, centers the sheet with this max width. */
+  sheetMaxWidth?: number;
   /** Floating label text for the text field. */
   label?: string;
   /** Placeholder text when no value selected. */
@@ -79,6 +83,8 @@ export const SheetPicker: FunctionComponent<SheetPickerProps> = ({
   title,
   searchPlaceholder,
   autoDismiss = true,
+  maxHeightRatio = 0.9,
+  sheetMaxWidth,
   label,
   placeholder,
   disabled = false,
@@ -109,6 +115,8 @@ export const SheetPicker: FunctionComponent<SheetPickerProps> = ({
       title={title}
       searchPlaceholder={searchPlaceholder}
       autoDismiss={autoDismiss}
+      maxHeightRatio={maxHeightRatio}
+      sheetMaxWidth={sheetMaxWidth}
       label={label}
       placeholder={placeholder}
       disabled={disabled}

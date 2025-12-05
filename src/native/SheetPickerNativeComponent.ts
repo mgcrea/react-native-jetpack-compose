@@ -2,7 +2,7 @@
 /* eslint-disable @typescript-eslint/array-type */
 /* eslint-disable @typescript-eslint/consistent-type-definitions */
 import { codegenNativeComponent, type HostComponent, type ViewProps } from "react-native";
-import type { DirectEventHandler } from "react-native/Libraries/Types/CodegenTypes";
+import type { DirectEventHandler, Double } from "react-native/Libraries/Types/CodegenTypes";
 
 /**
  * Option type for the SheetPicker.
@@ -42,6 +42,10 @@ export interface NativeSheetPickerProps extends ViewProps {
   searchPlaceholder?: string | null;
   /** Whether to automatically dismiss the sheet after selection. Defaults to true. */
   autoDismiss?: boolean | null;
+  /** Maximum height of the sheet as a ratio of screen height (0-1). Defaults to 0.9. */
+  maxHeightRatio?: Double | null;
+  /** Maximum width of the sheet in dp. When set, centers the sheet with this max width. */
+  sheetMaxWidth?: Double | null;
 
   /** Floating label text for the text field. */
   label?: string | null;

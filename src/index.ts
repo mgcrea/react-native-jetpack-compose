@@ -3,3 +3,4 @@ export { DateRangePicker, type DateRange, type DateRangePickerProps } from "./na
 export { ModalBottomSheet } from "./native/ModalBottomSheet";
 export { Picker, type PickerOption, type PickerProps } from "./native/Picker";
 export { SheetPicker, type SheetPickerOption, type SheetPickerProps } from "./native/SheetPicker";
+export { TextField, type TextFieldProps } from "./native/TextField";

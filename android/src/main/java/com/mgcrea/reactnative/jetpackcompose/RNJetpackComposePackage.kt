@@ -17,5 +17,6 @@ class RNJetpackComposePackage : ReactPackage {
     DateRangePickerViewManager(),
     PickerViewManager(),
     SheetPickerViewManager(),
+    TextFieldViewManager(),
   )
 }

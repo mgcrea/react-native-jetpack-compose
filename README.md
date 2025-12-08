@@ -1,435 +1,171 @@
-# @mgcrea/react-native-jetpack-compose
+<!-- markdownlint-disable MD033 -->
+<p align="center">
+  <a href="https://mgcrea.github.io/react-native-jetpack-compose">
+    <img src="./.github/assets/logo.png" alt="logo" width="480" height="300"/>
+  </a>
+</p>
+<p align="center">
+  <a href="https://www.npmjs.com/package/@mgcrea/react-native-jetpack-compose">
+    <img src="https://img.shields.io/npm/v/@mgcrea/react-native-jetpack-compose.svg?style=for-the-badge" alt="npm version" />
+  </a>
+  <a href="https://www.npmjs.com/package/@mgcrea/react-native-jetpack-compose">
+    <img src="https://img.shields.io/npm/dt/@mgcrea/react-native-jetpack-compose.svg?style=for-the-badge" alt="npm total downloads" />
+  </a>
+  <a href="https://www.npmjs.com/package/@mgcrea/react-native-jetpack-compose">
+    <img src="https://img.shields.io/npm/dm/@mgcrea/react-native-jetpack-compose.svg?style=for-the-badge" alt="npm monthly downloads" />
+  </a>
+  <a href="https://www.npmjs.com/package/@mgcrea/react-native-jetpack-compose">
+    <img src="https://img.shields.io/npm/l/@mgcrea/react-native-jetpack-compose.svg?style=for-the-badge" alt="npm license" />
+  </a>
+  <br />
+  <a href="https://github.com/mgcrea/react-native-jetpack-compose/actions/workflows/main.yaml">
+    <img src="https://img.shields.io/github/actions/workflow/status/mgcrea/react-native-jetpack-compose/main.yaml?style=for-the-badge&branch=main" alt="build status" />
+  </a>
+  <a href="https://depfu.com/github/mgcrea/react-native-jetpack-compose">
+    <img src="https://img.shields.io/badge/dependencies-none-brightgreen?style=for-the-badge" alt="dependencies status" />
+  </a>
+</p>
+<!-- markdownlint-enable MD033 -->
 
-[![npm version](https://img.shields.io/npm/v/@mgcrea/react-native-jetpack-compose.svg)](https://www.npmjs.com/package/@mgcrea/react-native-jetpack-compose)
-[![license](https://img.shields.io/npm/l/@mgcrea/react-native-jetpack-compose.svg)](https://github.com/mgcrea/react-native-jetpack-compose/blob/main/LICENSE)
+## Overview
 
-Material 3 components for React Native, powered by Jetpack Compose. This library provides native Android UI components with full Material Design 3 theming support.
+Native Jetpack Compose components for React Native using the Fabric renderer. Build Android forms and interfaces with Material 3 design while maintaining a familiar React workflow.
 
 ## Features
 
-- **DatePicker** - A text field that opens a Material 3 date picker dialog
-- **DateRangePicker** - A text field that opens a date range picker dialog
-- **TimePicker** - A text field that opens a Material 3 time picker dialog
-- **TimeRangePicker** - A text field that opens a time range picker dialog
-- **Picker** - A dropdown picker using ExposedDropdownMenuBox
-- **SheetPicker** - A searchable picker that opens in a modal bottom sheet
-- **ModalBottomSheet** - A Material 3 modal bottom sheet with gesture support
-- **TextField** - A Material 3 OutlinedTextField with label, error state, and more
+- **🤖 Native Jetpack Compose** - Real Material 3 components, not web views or custom drawings
+- **🔧 No Dependencies** - Safe from supply chain attacks
+- **⚡ Fabric Renderer** - Built on React Native's modern architecture
+- **📝 TypeScript-first** - Full type safety and autocomplete support
+- **🔄 Two-Way Binding** - State syncs between JavaScript and Compose
+- **📋 Form Components** - TextField, Picker, SheetPicker, DatePicker, TimePicker
+- **🎨 Material You** - Dynamic colors on Android 12+ with system theming
+- **📱 Wide Compatibility** - Supports Android 7+ (API level 24)
+- **📦 Zero Config** - No complex setup, just install and use
 
-## Requirements
+## Demo
 
-- React Native 0.76+ (New Architecture required)
-- Kotlin 2.0+ (for Compose compiler plugin)
-- Android SDK 24+ (minSdk)
-- Android SDK 35+ (compileSdk)
+![demo](./.github/assets/demo.gif)
 
-## Installation
+## Quick Start
+
+### Installation
 
 ```bash
 npm install @mgcrea/react-native-jetpack-compose
 # or
-yarn add @mgcrea/react-native-jetpack-compose
-# or
 pnpm add @mgcrea/react-native-jetpack-compose
+# or
+yarn add @mgcrea/react-native-jetpack-compose
 ```
 
-The library will auto-link with React Native. No additional setup is required.
+### Requirements
 
-## Usage
+- React Native 0.76.0+ (New Architecture required)
+- Android API level 24+ (Android 7.0)
 
-### DatePicker
-
-A text field that opens a Material 3 date picker dialog when tapped.
+### Basic Usage
 
 ```tsx
 import { useState } from "react";
-import { DatePicker } from "@mgcrea/react-native-jetpack-compose";
+import { View } from "react-native";
+import { TextField, DatePicker, Picker } from "@mgcrea/react-native-jetpack-compose";
 
-function MyComponent() {
+export function BookingForm() {
+  const [name, setName] = useState("");
   const [date, setDate] = useState<Date | null>(null);
+  const [room, setRoom] = useState<string | null>(null);
 
   return (
-    <DatePicker
-      value={date}
-      label="Birth Date"
-      placeholder="Select a date"
-      onConfirm={(selectedDate) => setDate(selectedDate)}
-    />
-  );
-}
-```
-
-#### Props
-
-| Prop                 | Type                               | Default    | Description                                         |
-| -------------------- | ---------------------------------- | ---------- | --------------------------------------------------- |
-| `value`              | `Date \| number \| string \| null` | -          | Selected date (Date, epoch ms, or ISO string)       |
-| `label`              | `string`                           | -          | Floating label text                                 |
-| `placeholder`        | `string`                           | -          | Placeholder when no date selected                   |
-| `disabled`           | `boolean`                          | `false`    | Whether the picker is disabled                      |
-| `minDate`            | `Date \| number \| string`         | -          | Minimum selectable date                             |
-| `maxDate`            | `Date \| number \| string`         | -          | Maximum selectable date                             |
-| `yearRange`          | `{ start: number; end: number }`   | 1900-2100  | Year range for the year selector                    |
-| `initialDisplayMode` | `"picker" \| "input"`              | `"picker"` | Initial mode (calendar or text input)               |
-| `showModeToggle`     | `boolean`                          | `true`     | Show button to toggle between modes                 |
-| `title`              | `string`                           | -          | Dialog title text                                   |
-| `confirmLabel`       | `string`                           | `"OK"`     | Confirm button label                                |
-| `cancelLabel`        | `string`                           | `"Cancel"` | Cancel button label                                 |
-| `onConfirm`          | `(date: Date \| null) => void`     | -          | Called when user confirms selection                 |
-| `onCancel`           | `() => void`                       | -          | Called when user cancels                            |
-| `onChange`           | `(date: Date \| null) => void`     | -          | Called when selection changes (before confirmation) |
-
-### DateRangePicker
-
-A text field that opens a date range picker dialog for selecting start and end dates.
-
-```tsx
-import { useState } from "react";
-import { DateRangePicker, type DateRange } from "@mgcrea/react-native-jetpack-compose";
-
-function MyComponent() {
-  const [range, setRange] = useState<DateRange>({ startDate: null, endDate: null });
-
-  return (
-    <DateRangePicker
-      value={range}
-      label="Trip Dates"
-      placeholder="Select dates"
-      onConfirm={(selectedRange) => setRange(selectedRange)}
-    />
-  );
-}
-```
-
-#### Props
-
-Same as DatePicker, with these differences:
-
-| Prop        | Type                         | Description                      |
-| ----------- | ---------------------------- | -------------------------------- |
-| `value`     | `DateRange \| null`          | `{ startDate, endDate }` object  |
-| `onConfirm` | `(range: DateRange) => void` | Called with selected range       |
-| `onChange`  | `(range: DateRange) => void` | Called when range changes        |
-
-### TimePicker
-
-A text field that opens a Material 3 time picker dialog when tapped. Supports both dial (clock) and keyboard input modes.
-
-```tsx
-import { useState } from "react";
-import { TimePicker } from "@mgcrea/react-native-jetpack-compose";
-
-function MyComponent() {
-  const [time, setTime] = useState<Date | null>(null);
-
-  return (
-    <TimePicker
-      value={time}
-      label="Meeting Time"
-      placeholder="Select a time"
-      onConfirm={(selectedTime) => setTime(selectedTime)}
-    />
-  );
-}
-```
-
-#### Props
-
-| Prop                 | Type                           | Default    | Description                                         |
-| -------------------- | ------------------------------ | ---------- | --------------------------------------------------- |
-| `value`              | `Date \| null`                 | -          | Selected time (only hours/minutes are used)         |
-| `label`              | `string`                       | -          | Floating label text                                 |
-| `placeholder`        | `string`                       | -          | Placeholder when no time selected                   |
-| `disabled`           | `boolean`                      | `false`    | Whether the picker is disabled                      |
-| `is24Hour`           | `boolean`                      | system     | Use 24-hour format (defaults to system locale)      |
-| `initialDisplayMode` | `"picker" \| "input"`          | `"picker"` | Initial mode (dial or keyboard input)               |
-| `showModeToggle`     | `boolean`                      | `true`     | Show button to toggle between modes                 |
-| `title`              | `string`                       | -          | Dialog title text                                   |
-| `confirmLabel`       | `string`                       | `"OK"`     | Confirm button label                                |
-| `cancelLabel`        | `string`                       | `"Cancel"` | Cancel button label                                 |
-| `onConfirm`          | `(time: Date \| null) => void` | -          | Called when user confirms selection                 |
-| `onCancel`           | `() => void`                   | -          | Called when user cancels                            |
-| `onChange`           | `(time: Date \| null) => void` | -          | Called when selection changes (before confirmation) |
-
-### TimeRangePicker
-
-A text field that opens a time range picker dialog for selecting start and end times.
-
-```tsx
-import { useState } from "react";
-import { TimeRangePicker, type TimeRange } from "@mgcrea/react-native-jetpack-compose";
-
-function MyComponent() {
-  const [range, setRange] = useState<TimeRange>({ startTime: null, endTime: null });
-
-  return (
-    <TimeRangePicker
-      value={range}
-      label="Working Hours"
-      placeholder="Select time range"
-      onConfirm={(selectedRange) => setRange(selectedRange)}
-    />
-  );
-}
-```
-
-#### Props
-
-Same as TimePicker, with these differences:
-
-| Prop        | Type                         | Description                      |
-| ----------- | ---------------------------- | -------------------------------- |
-| `value`     | `TimeRange \| null`          | `{ startTime, endTime }` object  |
-| `onConfirm` | `(range: TimeRange) => void` | Called with selected range       |
-| `onChange`  | `(range: TimeRange) => void` | Called when range changes        |
-
-### Picker
-
-A dropdown picker component using Material 3's ExposedDropdownMenuBox.
-
-```tsx
-import { useState } from "react";
-import { Picker } from "@mgcrea/react-native-jetpack-compose";
-
-const countries = [
-  { value: "us", label: "United States" },
-  { value: "uk", label: "United Kingdom" },
-  { value: "fr", label: "France" },
-];
-
-function MyComponent() {
-  const [country, setCountry] = useState<string | null>(null);
-
-  return (
-    <Picker
-      options={countries}
-      value={country}
-      label="Country"
-      placeholder="Select a country"
-      onChange={setCountry}
-    />
-  );
-}
-```
-
-#### Props
-
-| Prop          | Type                      | Default | Description                    |
-| ------------- | ------------------------- | ------- | ------------------------------ |
-| `options`     | `PickerOption[]`          | -       | Array of `{ value, label }`    |
-| `value`       | `string \| null`          | -       | Currently selected value       |
-| `label`       | `string`                  | -       | Floating label text            |
-| `placeholder` | `string`                  | -       | Placeholder when no selection  |
-| `disabled`    | `boolean`                 | `false` | Whether the picker is disabled |
-| `onChange`    | `(value: string) => void` | -       | Called when selection changes  |
-
-### SheetPicker
-
-A searchable picker that opens a modal bottom sheet. Ideal for long lists.
-
-```tsx
-import { useState } from "react";
-import { SheetPicker } from "@mgcrea/react-native-jetpack-compose";
-
-const countries = [
-  { value: "us", label: "United States" },
-  { value: "uk", label: "United Kingdom" },
-  // ... many more options
-];
-
-function MyComponent() {
-  const [country, setCountry] = useState<string | null>(null);
-
-  return (
-    <SheetPicker
-      options={countries}
-      value={country}
-      label="Country"
-      placeholder="Select a country"
-      title="Select Country"
-      searchPlaceholder="Search countries..."
-      onSelect={setCountry}
-    />
-  );
-}
-```
-
-#### Props
-
-| Prop                | Type                      | Default | Description                         |
-| ------------------- | ------------------------- | ------- | ----------------------------------- |
-| `options`           | `SheetPickerOption[]`     | -       | Array of `{ value, label }`         |
-| `value`             | `string \| null`          | -       | Currently selected value            |
-| `label`             | `string`                  | -       | Floating label text                 |
-| `placeholder`       | `string`                  | -       | Placeholder when no selection       |
-| `title`             | `string`                  | -       | Title at top of the sheet           |
-| `searchPlaceholder` | `string`                  | -       | Placeholder for search field        |
-| `autoDismiss`       | `boolean`                 | `true`  | Auto-close sheet after selection    |
-| `maxHeightRatio`    | `number`                  | `0.9`   | Max height as ratio of screen (0-1) |
-| `sheetMaxWidth`     | `number`                  | -       | Max width of sheet in dp (centered) |
-| `disabled`          | `boolean`                 | `false` | Whether the picker is disabled      |
-| `onSelect`          | `(value: string) => void` | -       | Called when an option is selected   |
-| `onDismiss`         | `() => void`              | -       | Called when sheet is dismissed      |
-
-### ModalBottomSheet
-
-A Material 3 modal bottom sheet with native gestures and animations.
-
-```tsx
-import { useState } from "react";
-import { Button, Text, View } from "react-native";
-import { ModalBottomSheet } from "@mgcrea/react-native-jetpack-compose";
-
-function MyComponent() {
-  const [visible, setVisible] = useState(false);
-
-  return (
-    <View style={{ flex: 1 }}>
-      <Button title="Open Sheet" onPress={() => setVisible(true)} />
-
-      <ModalBottomSheet visible={visible} onDismiss={() => setVisible(false)}>
-        <View style={{ padding: 20 }}>
-          <Text>Sheet Content</Text>
-          <Button title="Close" onPress={() => setVisible(false)} />
-        </View>
-      </ModalBottomSheet>
+    <View style={{ flex: 1, padding: 16, gap: 16 }}>
+      <TextField
+        label="Guest Name"
+        value={name}
+        onChange={setName}
+      />
+      <DatePicker
+        label="Check-in Date"
+        value={date}
+        onConfirm={setDate}
+      />
+      <Picker
+        label="Room Type"
+        value={room}
+        onChange={setRoom}
+        options={[
+          { value: "standard", label: "Standard Room" },
+          { value: "deluxe", label: "Deluxe Suite" },
+          { value: "penthouse", label: "Penthouse" },
+        ]}
+      />
     </View>
   );
 }
 ```
 
-#### Props
+## How It Works
 
-| Prop             | Type                   | Default | Description                         |
-| ---------------- | ---------------------- | ------- | ----------------------------------- |
-| `visible`        | `boolean`              | `false` | Controls visibility of the sheet    |
-| `showDragHandle` | `boolean`              | `true`  | Show drag handle at top             |
-| `maxHeightRatio` | `number`               | `0.9`   | Max height as ratio of screen (0-1) |
-| `onDismiss`      | `() => void`           | -       | Called when sheet is dismissed      |
-| `children`       | `ReactNode`            | -       | Content to render inside            |
-| `style`          | `StyleProp<ViewStyle>` | -       | Custom styles                       |
+Components are rendered directly through Jetpack Compose:
 
-### TextField
+1. **React renders JSX** - Components receive props and manage state
+2. **Props bridge to native** - Fabric passes props to Kotlin ViewManagers
+3. **Compose renders UI** - Native Jetpack Compose renders Material 3 components
+4. **Events bridge back** - User interactions trigger React callbacks
 
-A Material 3 OutlinedTextField for text input with floating labels, error states, icons, and keyboard configuration.
+This means 60fps native performance with no JavaScript layout overhead.
 
-```tsx
-import { useState } from "react";
-import { TextField } from "@mgcrea/react-native-jetpack-compose";
+## Documentation
 
-function MyComponent() {
-  const [email, setEmail] = useState("");
-  const [error, setError] = useState(false);
+📚 **[Full Documentation](https://mgcrea.github.io/react-native-jetpack-compose/)**
 
-  return (
-    <TextField
-      value={email}
-      label="Email"
-      placeholder="Enter your email"
-      leadingIcon="Email"
-      keyboardType="email"
-      autoCapitalize="none"
-      error={error}
-      helperText={error ? "Invalid email address" : undefined}
-      onChange={(text) => {
-        setEmail(text);
-        setError(!text.includes("@"));
-      }}
-    />
-  );
-}
-```
+- **[Getting Started](https://mgcrea.github.io/react-native-jetpack-compose/getting-started/installation/)** - Installation and setup
+- **[Components](https://mgcrea.github.io/react-native-jetpack-compose/components/)** - All available components
+- **[Guides](https://mgcrea.github.io/react-native-jetpack-compose/guides/building-forms/)** - Forms, styling, and events
+- **[Examples](https://mgcrea.github.io/react-native-jetpack-compose/examples/contact-form/)** - Complete working examples
 
-#### Props
+## Contributing
 
-| Prop                | Type                        | Default       | Description                                    |
-| ------------------- | --------------------------- | ------------- | ---------------------------------------------- |
-| `value`             | `string`                    | -             | Current text value                             |
-| `label`             | `string`                    | -             | Floating label text                            |
-| `placeholder`       | `string`                    | -             | Placeholder when empty                         |
-| `disabled`          | `boolean`                   | `false`       | Whether the field is disabled                  |
-| `editable`          | `boolean`                   | `true`        | Whether text can be edited                     |
-| `multiline`         | `boolean`                   | `false`       | Enable multiline input                         |
-| `maxLength`         | `number`                    | -             | Maximum character count                        |
-| `secureTextEntry`   | `boolean`                   | `false`       | Hide text for password fields                  |
-| `error`             | `boolean`                   | `false`       | Show error state styling                       |
-| `helperText`        | `string`                    | -             | Helper or error text below field               |
-| `keyboardType`      | `string`                    | `"default"`   | Keyboard type: default, email, number, phone, decimal, url |
-| `returnKeyType`     | `string`                    | `"done"`      | IME action: done, go, next, search, send       |
-| `autoCapitalize`    | `string`                    | `"sentences"` | Capitalization: none, sentences, words, characters |
-| `autoCorrect`       | `boolean`                   | `true`        | Enable/disable auto-correct                    |
-| `leadingIcon`       | `string`                    | -             | Leading icon name (see supported icons)        |
-| `trailingIcon`      | `string`                    | -             | Trailing icon name (see supported icons)       |
-| `showCounter`       | `boolean`                   | `true`        | Show character counter when maxLength is set   |
-| `onChange`          | `(text: string) => void`    | -             | Called when text changes                       |
-| `onFocus`           | `() => void`                | -             | Called when field gains focus                  |
-| `onBlur`            | `() => void`                | -             | Called when field loses focus                  |
-| `onSubmitEditing`   | `() => void`                | -             | Called when IME action button is pressed       |
-| `onTrailingIconPress` | `() => void`              | -             | Called when trailing icon is pressed           |
-| `style`             | `StyleProp<ViewStyle>`      | -             | Custom styles                                  |
-
-#### Supported Icons
-
-The following Material Icons are available for `leadingIcon` and `trailingIcon`:
-
-- **Common**: `Search`, `Clear`, `Close`, `Check`, `Edit`, `Info`
-- **Input**: `Email`, `Phone`, `Person`, `Lock`
-- **Status**: `Warning`
-
-## Theming
-
-All components inherit their colors from Material 3's `MaterialTheme`. To customize colors (including outline colors, primary colors, etc.), wrap your Compose content with a custom theme in your Android app.
-
-### Using XML Themes
-
-The simplest approach is to customize your app's Material 3 theme in `res/values/themes.xml`:
-
-```xml
-<style name="Theme.MyApp" parent="Theme.Material3.DayNight">
-    <!-- Primary brand color -->
-    <item name="colorPrimary">@color/my_primary</item>
-    <!-- Outline color for text fields -->
-    <item name="colorOutline">@color/my_outline</item>
-    <!-- Focused outline color -->
-    <item name="colorPrimaryContainer">@color/my_primary_container</item>
-    <!-- Error color -->
-    <item name="colorError">@color/my_error</item>
-</style>
-```
-
-### Common Color Attributes
-
-| Attribute                | Affects                                           |
-| ------------------------ | ------------------------------------------------- |
-| `colorPrimary`           | Focused outline, selected states, buttons         |
-| `colorOutline`           | Default (unfocused) outline color                 |
-| `colorOutlineVariant`    | Subtle outlines and dividers                      |
-| `colorError`             | Error state outline and text                      |
-| `colorSurface`           | Background of text fields and dialogs             |
-| `colorOnSurface`         | Text and icon colors                              |
-| `colorOnSurfaceVariant`  | Placeholder and label colors                      |
-
-For a complete list of Material 3 color attributes, see the [Material 3 Color System documentation](https://m3.material.io/styles/color/system).
-
-## Example
-
-Check out the [example app](./example) for a complete demo:
+Contributions are welcome! To run the example project:
 
 ```bash
+git clone https://github.com/mgcrea/react-native-jetpack-compose.git
+cd react-native-jetpack-compose
+pnpm install
+
 cd example
 pnpm install
 pnpm run android
 ```
 
-## Platform Support
+## Credits
 
-| Platform | Supported |
-| -------- | --------- |
-| Android  | ✅        |
-| iOS      | ❌        |
+- [Jetpack Compose](https://developer.android.com/jetpack/compose) - Android's modern UI toolkit
+- [React Native](https://reactnative.dev/) - Build native apps using React
 
-This library is Android-only as it uses Jetpack Compose under the hood.
+## Authors
 
-## License
+- [Olivier Louvignes](https://github.com/mgcrea) - [@mgcrea](https://twitter.com/mgcrea)
 
-MIT © [Olivier Louvignes](https://github.com/mgcrea)
+```text
+MIT License
+
+Copyright (c) 2025 Olivier Louvignes <olivier@mgcrea.io>
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+```

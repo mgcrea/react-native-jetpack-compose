@@ -1,69 +1,44 @@
 ---
 title: React Native Jetpack Compose
 description: Material 3 components for React Native, powered by Jetpack Compose
-template: splash
-hero:
-  tagline: Native Android UI components powered by Jetpack Compose and Material 3 for React Native
-  actions:
-    - text: Get Started
-      link: /react-native-jetpack-compose/getting-started/installation/
-      icon: right-arrow
-    - text: View on GitHub
-      link: https://github.com/mgcrea/react-native-jetpack-compose
-      icon: external
-      variant: minimal
 ---
 
-import { Card, CardGrid } from '@astrojs/starlight/components';
+import { Card, CardGrid } from "@astrojs/starlight/components";
 
 ## Features
 
-<CardGrid stagger>
-  <Card title="Native Performance" icon="rocket">
-    Built directly on Jetpack Compose for smooth, native Android performance with Material 3 design.
-  </Card>
-  <Card title="New Architecture" icon="puzzle">
-    Uses React Native's Fabric renderer and codegen for type-safe native bindings.
-  </Card>
-  <Card title="Rich Components" icon="list-format">
-    Date pickers, time pickers, text fields, dropdowns, bottom sheets, and more.
-  </Card>
-  <Card title="TypeScript First" icon="seti:typescript">
-    Full TypeScript support with comprehensive type definitions for all components.
-  </Card>
-</CardGrid>
+- **🤖 Native Jetpack Compose** - Authentic Android components with Material 3 design
+- **🔧 No Dependencies** - Safe from supply chain attacks
+- **⚡ Fabric Renderer** - Built for React Native's New Architecture for optimal performance
+- **🎯 Type-Safe** - Full TypeScript support with comprehensive type definitions
+- **📝 Declarative** - Familiar React patterns with JSX syntax
+- **🎨 Material You** - Dynamic colors, system theming, and Material Icons support
+- **📱 Android 7+** - Broad device compatibility (API level 24+)
+- **📦 Zero Config** - No complex setup, just install and use
 
 ## Quick Example
 
 ```tsx
-import { useState } from 'react';
-import { DatePicker, TextField, Picker } from '@mgcrea/react-native-jetpack-compose';
+import { useState } from "react";
+import { DatePicker, TextField, Picker } from "@mgcrea/react-native-jetpack-compose";
 
 export function BookingForm() {
-  const [name, setName] = useState('');
+  const [name, setName] = useState("");
   const [date, setDate] = useState<Date | null>(null);
   const [room, setRoom] = useState<string | null>(null);
 
   return (
     <>
-      <TextField
-        label="Guest Name"
-        value={name}
-        onChange={setName}
-      />
-      <DatePicker
-        label="Check-in Date"
-        value={date}
-        onConfirm={setDate}
-      />
+      <TextField label="Guest Name" value={name} onChange={setName} />
+      <DatePicker label="Check-in Date" value={date} onConfirm={setDate} />
       <Picker
         label="Room Type"
         value={room}
         onChange={setRoom}
         options={[
-          { value: 'standard', label: 'Standard Room' },
-          { value: 'deluxe', label: 'Deluxe Suite' },
-          { value: 'penthouse', label: 'Penthouse' },
+          { value: "standard", label: "Standard Room" },
+          { value: "deluxe", label: "Deluxe Suite" },
+          { value: "penthouse", label: "Penthouse" },
         ]}
       />
     </>
@@ -104,19 +79,19 @@ export function BookingForm() {
 
 <CardGrid>
   <Card title="Installation" icon="setting">
-    Set up React Native Jetpack Compose in your project.
-    [Get started →](/react-native-jetpack-compose/getting-started/installation/)
+    Set up React Native Jetpack Compose in your project. [Get started
+    →](/react-native-jetpack-compose/getting-started/installation/)
   </Card>
   <Card title="Quick Start" icon="rocket">
-    Build your first form with native components.
-    [Quick start →](/react-native-jetpack-compose/getting-started/quick-start/)
+    Build your first form with native components. [Quick start
+    →](/react-native-jetpack-compose/getting-started/quick-start/)
   </Card>
   <Card title="Components" icon="list-format">
-    Explore all available components and their APIs.
-    [Browse components →](/react-native-jetpack-compose/components/)
+    Explore all available components and their APIs. [Browse components
+    →](/react-native-jetpack-compose/components/)
   </Card>
   <Card title="Examples" icon="open-book">
-    See complete working examples and patterns.
-    [View examples →](/react-native-jetpack-compose/examples/contact-form/)
+    See complete working examples and patterns. [View examples
+    →](/react-native-jetpack-compose/examples/contact-form/)
   </Card>
 </CardGrid>

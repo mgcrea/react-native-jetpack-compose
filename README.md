@@ -311,7 +311,7 @@ function MyComponent() {
 
 ### TextField
 
-A Material 3 OutlinedTextField for text input with floating labels, error states, and helper text.
+A Material 3 OutlinedTextField for text input with floating labels, error states, icons, and keyboard configuration.
 
 ```tsx
 import { useState } from "react";
@@ -326,6 +326,9 @@ function MyComponent() {
       value={email}
       label="Email"
       placeholder="Enter your email"
+      leadingIcon="Email"
+      keyboardType="email"
+      autoCapitalize="none"
       error={error}
       helperText={error ? "Invalid email address" : undefined}
       onChange={(text) => {
@@ -339,22 +342,39 @@ function MyComponent() {
 
 #### Props
 
-| Prop              | Type                   | Default | Description                          |
-| ----------------- | ---------------------- | ------- | ------------------------------------ |
-| `value`           | `string`               | -       | Current text value                   |
-| `label`           | `string`               | -       | Floating label text                  |
-| `placeholder`     | `string`               | -       | Placeholder when empty               |
-| `disabled`        | `boolean`              | `false` | Whether the field is disabled        |
-| `editable`        | `boolean`              | `true`  | Whether text can be edited           |
-| `multiline`       | `boolean`              | `false` | Enable multiline input               |
-| `maxLength`       | `number`               | -       | Maximum character count              |
-| `secureTextEntry` | `boolean`              | `false` | Hide text for password fields        |
-| `error`           | `boolean`              | `false` | Show error state styling             |
-| `helperText`      | `string`               | -       | Helper or error text below field     |
-| `onChange`        | `(text: string) => void` | -     | Called when text changes             |
-| `onFocus`         | `() => void`           | -       | Called when field gains focus        |
-| `onBlur`          | `() => void`           | -       | Called when field loses focus        |
-| `style`           | `StyleProp<ViewStyle>` | -       | Custom styles                        |
+| Prop                | Type                        | Default       | Description                                    |
+| ------------------- | --------------------------- | ------------- | ---------------------------------------------- |
+| `value`             | `string`                    | -             | Current text value                             |
+| `label`             | `string`                    | -             | Floating label text                            |
+| `placeholder`       | `string`                    | -             | Placeholder when empty                         |
+| `disabled`          | `boolean`                   | `false`       | Whether the field is disabled                  |
+| `editable`          | `boolean`                   | `true`        | Whether text can be edited                     |
+| `multiline`         | `boolean`                   | `false`       | Enable multiline input                         |
+| `maxLength`         | `number`                    | -             | Maximum character count                        |
+| `secureTextEntry`   | `boolean`                   | `false`       | Hide text for password fields                  |
+| `error`             | `boolean`                   | `false`       | Show error state styling                       |
+| `helperText`        | `string`                    | -             | Helper or error text below field               |
+| `keyboardType`      | `string`                    | `"default"`   | Keyboard type: default, email, number, phone, decimal, url |
+| `returnKeyType`     | `string`                    | `"done"`      | IME action: done, go, next, search, send       |
+| `autoCapitalize`    | `string`                    | `"sentences"` | Capitalization: none, sentences, words, characters |
+| `autoCorrect`       | `boolean`                   | `true`        | Enable/disable auto-correct                    |
+| `leadingIcon`       | `string`                    | -             | Leading icon name (see supported icons)        |
+| `trailingIcon`      | `string`                    | -             | Trailing icon name (see supported icons)       |
+| `showCounter`       | `boolean`                   | `true`        | Show character counter when maxLength is set   |
+| `onChange`          | `(text: string) => void`    | -             | Called when text changes                       |
+| `onFocus`           | `() => void`                | -             | Called when field gains focus                  |
+| `onBlur`            | `() => void`                | -             | Called when field loses focus                  |
+| `onSubmitEditing`   | `() => void`                | -             | Called when IME action button is pressed       |
+| `onTrailingIconPress` | `() => void`              | -             | Called when trailing icon is pressed           |
+| `style`             | `StyleProp<ViewStyle>`      | -             | Custom styles                                  |
+
+#### Supported Icons
+
+The following Material Icons are available for `leadingIcon` and `trailingIcon`:
+
+- **Common**: `Search`, `Clear`, `Close`, `Check`, `Edit`, `Info`
+- **Input**: `Email`, `Phone`, `Person`, `Lock`
+- **Status**: `Warning`
 
 ## Theming
 

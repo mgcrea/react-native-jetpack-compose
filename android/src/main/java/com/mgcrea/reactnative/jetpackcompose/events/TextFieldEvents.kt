@@ -51,3 +51,33 @@ class TextFieldBlurEvent(surfaceId: Int, viewId: Int) :
     const val EVENT_NAME = "topTextFieldBlur"
   }
 }
+
+/**
+ * Fired when the IME action button is pressed.
+ */
+class TextFieldSubmitEvent(surfaceId: Int, viewId: Int) :
+  Event<TextFieldSubmitEvent>(surfaceId, viewId) {
+
+  override fun getEventName(): String = EVENT_NAME
+
+  override fun getEventData(): WritableMap = Arguments.createMap()
+
+  companion object {
+    const val EVENT_NAME = "topSubmitEditing"
+  }
+}
+
+/**
+ * Fired when the trailing icon is pressed.
+ */
+class TextFieldTrailingIconPressEvent(surfaceId: Int, viewId: Int) :
+  Event<TextFieldTrailingIconPressEvent>(surfaceId, viewId) {
+
+  override fun getEventName(): String = EVENT_NAME
+
+  override fun getEventData(): WritableMap = Arguments.createMap()
+
+  companion object {
+    const val EVENT_NAME = "topTrailingIconPress"
+  }
+}

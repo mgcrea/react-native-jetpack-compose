@@ -72,6 +72,34 @@ internal class TextFieldViewManager :
     view.setHelperText(value)
   }
 
+  override fun setKeyboardType(view: TextFieldView, value: String?) {
+    view.setKeyboardType(value)
+  }
+
+  override fun setReturnKeyType(view: TextFieldView, value: String?) {
+    view.setReturnKeyType(value)
+  }
+
+  override fun setAutoCapitalize(view: TextFieldView, value: String?) {
+    view.setAutoCapitalize(value)
+  }
+
+  override fun setAutoCorrect(view: TextFieldView, value: Boolean) {
+    view.setAutoCorrect(value)
+  }
+
+  override fun setLeadingIcon(view: TextFieldView, value: String?) {
+    view.setLeadingIcon(value)
+  }
+
+  override fun setTrailingIcon(view: TextFieldView, value: String?) {
+    view.setTrailingIcon(value)
+  }
+
+  override fun setShowCounter(view: TextFieldView, value: Boolean) {
+    view.setShowCounter(value)
+  }
+
   companion object {
     const val NAME = "TextFieldView"
   }

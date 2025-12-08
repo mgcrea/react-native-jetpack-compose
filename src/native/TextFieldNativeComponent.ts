@@ -35,12 +35,31 @@ export interface NativeTextFieldProps extends ViewProps {
   /** Helper/error text below field */
   helperText?: string | null;
 
+  /** Keyboard type: "default" | "email" | "number" | "phone" | "decimal" | "url" */
+  keyboardType?: string | null;
+  /** IME action button: "done" | "go" | "next" | "search" | "send" */
+  returnKeyType?: string | null;
+  /** Auto-capitalization: "none" | "sentences" | "words" | "characters" */
+  autoCapitalize?: string | null;
+  /** Enable/disable auto-correct */
+  autoCorrect?: boolean | null;
+  /** Leading icon name from Material Icons */
+  leadingIcon?: string | null;
+  /** Trailing icon name from Material Icons */
+  trailingIcon?: string | null;
+  /** Show character counter when maxLength is set */
+  showCounter?: boolean | null;
+
   /** Native event handler fired when text changes */
   onTextFieldChange?: DirectEventHandler<TextChangeEvent> | null;
   /** Native event handler fired when field gains focus */
   onTextFieldFocus?: DirectEventHandler<Readonly<{}>> | null;
   /** Native event handler fired when field loses focus */
   onTextFieldBlur?: DirectEventHandler<Readonly<{}>> | null;
+  /** Native event handler fired when IME action is pressed */
+  onSubmitEditing?: DirectEventHandler<Readonly<{}>> | null;
+  /** Native event handler fired when trailing icon is pressed */
+  onTrailingIconPress?: DirectEventHandler<Readonly<{}>> | null;
 }
 
 /**

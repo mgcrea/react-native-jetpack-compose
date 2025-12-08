@@ -17,9 +17,13 @@ export type TextFieldProps = Omit<
   | "maxLength"
   | "secureTextEntry"
   | "error"
+  | "autoCorrect"
+  | "showCounter"
   | "onTextFieldChange"
   | "onTextFieldFocus"
   | "onTextFieldBlur"
+  | "onSubmitEditing"
+  | "onTrailingIconPress"
 > & {
   /** Current text value */
   value?: string;
@@ -41,12 +45,32 @@ export type TextFieldProps = Omit<
   error?: boolean;
   /** Helper/error text below field */
   helperText?: string;
+
+  /** Keyboard type for input. Default: "default" */
+  keyboardType?: "default" | "email" | "number" | "phone" | "decimal" | "url";
+  /** IME action button type. Default: "done" */
+  returnKeyType?: "done" | "go" | "next" | "search" | "send";
+  /** Auto-capitalization mode. Default: "sentences" */
+  autoCapitalize?: "none" | "sentences" | "words" | "characters";
+  /** Auto-correct enabled. Default: true */
+  autoCorrect?: boolean;
+  /** Leading icon name (Material Icons). e.g., "Search", "Email", "Phone" */
+  leadingIcon?: string;
+  /** Trailing icon name (Material Icons). e.g., "Clear", "Visibility" */
+  trailingIcon?: string;
+  /** Show character counter when maxLength is set. Default: true */
+  showCounter?: boolean;
+
   /** Callback fired when text changes */
   onChange?: (text: string) => void;
   /** Callback fired when field gains focus */
   onFocus?: () => void;
   /** Callback fired when field loses focus */
   onBlur?: () => void;
+  /** Callback fired when IME action button is pressed */
+  onSubmitEditing?: () => void;
+  /** Callback fired when trailing icon is pressed */
+  onTrailingIconPress?: () => void;
   /** Custom styles applied to the container */
   style?: StyleProp<ViewStyle>;
 };
@@ -75,9 +99,18 @@ export const TextField: FunctionComponent<TextFieldProps> = ({
   secureTextEntry = false,
   error = false,
   helperText,
+  keyboardType = "default",
+  returnKeyType = "done",
+  autoCapitalize = "sentences",
+  autoCorrect = true,
+  leadingIcon,
+  trailingIcon,
+  showCounter = true,
   onChange,
   onFocus,
   onBlur,
+  onSubmitEditing,
+  onTrailingIconPress,
   style,
   ...props
 }) => {
@@ -96,9 +129,17 @@ export const TextField: FunctionComponent<TextFieldProps> = ({
     onBlur?.();
   }, [onBlur]);
 
+  const handleSubmitEditing = useCallback(() => {
+    onSubmitEditing?.();
+  }, [onSubmitEditing]);
+
+  const handleTrailingIconPress = useCallback(() => {
+    onTrailingIconPress?.();
+  }, [onTrailingIconPress]);
+
   // Calculate minHeight based on content
   const baseHeight = 64;
-  const helperTextHeight = helperText ? 20 : 0;
+  const helperTextHeight = helperText || (showCounter && maxLength) ? 20 : 0;
   const multilineExtraHeight = multiline ? 48 : 0; // ~2 extra lines
   const minHeight = baseHeight + helperTextHeight + multilineExtraHeight;
 
@@ -115,9 +156,18 @@ export const TextField: FunctionComponent<TextFieldProps> = ({
       secureTextEntry={secureTextEntry}
       error={error}
       helperText={helperText}
+      keyboardType={keyboardType}
+      returnKeyType={returnKeyType}
+      autoCapitalize={autoCapitalize}
+      autoCorrect={autoCorrect}
+      leadingIcon={leadingIcon}
+      trailingIcon={trailingIcon}
+      showCounter={showCounter}
       onTextFieldChange={handleChange}
       onTextFieldFocus={handleFocus}
       onTextFieldBlur={handleBlur}
+      onSubmitEditing={handleSubmitEditing}
+      onTrailingIconPress={handleTrailingIconPress}
       style={[{ minHeight }, style]}
     />
   );

@@ -9,6 +9,8 @@ Material 3 components for React Native, powered by Jetpack Compose. This library
 
 - **DatePicker** - A text field that opens a Material 3 date picker dialog
 - **DateRangePicker** - A text field that opens a date range picker dialog
+- **TimePicker** - A text field that opens a Material 3 time picker dialog
+- **TimeRangePicker** - A text field that opens a time range picker dialog
 - **Picker** - A dropdown picker using ExposedDropdownMenuBox
 - **SheetPicker** - A searchable picker that opens in a modal bottom sheet
 - **ModalBottomSheet** - A Material 3 modal bottom sheet with gesture support
@@ -108,6 +110,78 @@ Same as DatePicker, with these differences:
 | `value`     | `DateRange \| null`          | `{ startDate, endDate }` object  |
 | `onConfirm` | `(range: DateRange) => void` | Called with selected range       |
 | `onChange`  | `(range: DateRange) => void` | Called when range changes        |
+
+### TimePicker
+
+A text field that opens a Material 3 time picker dialog when tapped. Supports both dial (clock) and keyboard input modes.
+
+```tsx
+import { useState } from "react";
+import { TimePicker } from "@mgcrea/react-native-jetpack-compose";
+
+function MyComponent() {
+  const [time, setTime] = useState<Date | null>(null);
+
+  return (
+    <TimePicker
+      value={time}
+      label="Meeting Time"
+      placeholder="Select a time"
+      onConfirm={(selectedTime) => setTime(selectedTime)}
+    />
+  );
+}
+```
+
+#### Props
+
+| Prop                 | Type                           | Default    | Description                                         |
+| -------------------- | ------------------------------ | ---------- | --------------------------------------------------- |
+| `value`              | `Date \| null`                 | -          | Selected time (only hours/minutes are used)         |
+| `label`              | `string`                       | -          | Floating label text                                 |
+| `placeholder`        | `string`                       | -          | Placeholder when no time selected                   |
+| `disabled`           | `boolean`                      | `false`    | Whether the picker is disabled                      |
+| `is24Hour`           | `boolean`                      | system     | Use 24-hour format (defaults to system locale)      |
+| `initialDisplayMode` | `"picker" \| "input"`          | `"picker"` | Initial mode (dial or keyboard input)               |
+| `showModeToggle`     | `boolean`                      | `true`     | Show button to toggle between modes                 |
+| `title`              | `string`                       | -          | Dialog title text                                   |
+| `confirmLabel`       | `string`                       | `"OK"`     | Confirm button label                                |
+| `cancelLabel`        | `string`                       | `"Cancel"` | Cancel button label                                 |
+| `onConfirm`          | `(time: Date \| null) => void` | -          | Called when user confirms selection                 |
+| `onCancel`           | `() => void`                   | -          | Called when user cancels                            |
+| `onChange`           | `(time: Date \| null) => void` | -          | Called when selection changes (before confirmation) |
+
+### TimeRangePicker
+
+A text field that opens a time range picker dialog for selecting start and end times.
+
+```tsx
+import { useState } from "react";
+import { TimeRangePicker, type TimeRange } from "@mgcrea/react-native-jetpack-compose";
+
+function MyComponent() {
+  const [range, setRange] = useState<TimeRange>({ startTime: null, endTime: null });
+
+  return (
+    <TimeRangePicker
+      value={range}
+      label="Working Hours"
+      placeholder="Select time range"
+      onConfirm={(selectedRange) => setRange(selectedRange)}
+    />
+  );
+}
+```
+
+#### Props
+
+Same as TimePicker, with these differences:
+
+| Prop        | Type                         | Description                      |
+| ----------- | ---------------------------- | -------------------------------- |
+| `value`     | `TimeRange \| null`          | `{ startTime, endTime }` object  |
+| `onConfirm` | `(range: TimeRange) => void` | Called with selected range       |
+| `onChange`  | `(range: TimeRange) => void` | Called when range changes        |
 
 ### Picker
 

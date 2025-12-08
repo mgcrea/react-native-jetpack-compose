@@ -8,7 +8,7 @@ const config = [
     },
   },
   {
-    ignores: [".idea/**", "example/**", "test/**", "jest.setup.js"],
+    ignores: [".idea/**", "example/**", "test/**", "docs/**", "jest.setup.js"],
   },
   {
     languageOptions: {

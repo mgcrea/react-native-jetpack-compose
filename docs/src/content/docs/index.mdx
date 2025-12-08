@@ -1,40 +1,122 @@
 ---
-title: Welcome to Starlight
-description: Get started building your docs site with Starlight.
-template: splash # Remove or comment out this line to display the site sidebar on this page.
+title: React Native Jetpack Compose
+description: Material 3 components for React Native, powered by Jetpack Compose
+template: splash
 hero:
-  tagline: Congrats on setting up a new Starlight project!
-  image:
-    file: ../../assets/houston.webp
+  tagline: Native Android UI components powered by Jetpack Compose and Material 3 for React Native
   actions:
-    - text: Example Guide
-      link: /guides/example/
+    - text: Get Started
+      link: /react-native-jetpack-compose/getting-started/installation/
       icon: right-arrow
-    - text: Read the Starlight docs
-      link: https://starlight.astro.build
+    - text: View on GitHub
+      link: https://github.com/mgcrea/react-native-jetpack-compose
       icon: external
       variant: minimal
 ---
 
 import { Card, CardGrid } from '@astrojs/starlight/components';
 
-## Next steps
+## Features
 
 <CardGrid stagger>
-	<Card title="Update content" icon="pencil">
-		Edit `src/content/docs/index.mdx` to see this page change.
-	</Card>
-	<Card title="Change page layout" icon="document">
-		Delete `template: splash` in `src/content/docs/index.mdx` to display a
-		sidebar on this page.
-	</Card>
-	<Card title="Add new content" icon="add-document">
-		Add Markdown or MDX files to `src/content/docs` to create new pages.
-	</Card>
-	<Card title="Configure your site" icon="setting">
-		Edit your `sidebar` and other config in `astro.config.mjs`.
-	</Card>
-	<Card title="Read the docs" icon="open-book">
-		Learn more in [the Starlight Docs](https://starlight.astro.build/).
-	</Card>
+  <Card title="Native Performance" icon="rocket">
+    Built directly on Jetpack Compose for smooth, native Android performance with Material 3 design.
+  </Card>
+  <Card title="New Architecture" icon="puzzle">
+    Uses React Native's Fabric renderer and codegen for type-safe native bindings.
+  </Card>
+  <Card title="Rich Components" icon="list-format">
+    Date pickers, time pickers, text fields, dropdowns, bottom sheets, and more.
+  </Card>
+  <Card title="TypeScript First" icon="seti:typescript">
+    Full TypeScript support with comprehensive type definitions for all components.
+  </Card>
+</CardGrid>
+
+## Quick Example
+
+```tsx
+import { useState } from 'react';
+import { DatePicker, TextField, Picker } from '@mgcrea/react-native-jetpack-compose';
+
+export function BookingForm() {
+  const [name, setName] = useState('');
+  const [date, setDate] = useState<Date | null>(null);
+  const [room, setRoom] = useState<string | null>(null);
+
+  return (
+    <>
+      <TextField
+        label="Guest Name"
+        value={name}
+        onChange={setName}
+      />
+      <DatePicker
+        label="Check-in Date"
+        value={date}
+        onConfirm={setDate}
+      />
+      <Picker
+        label="Room Type"
+        value={room}
+        onChange={setRoom}
+        options={[
+          { value: 'standard', label: 'Standard Room' },
+          { value: 'deluxe', label: 'Deluxe Suite' },
+          { value: 'penthouse', label: 'Penthouse' },
+        ]}
+      />
+    </>
+  );
+}
+```
+
+## Available Components
+
+<CardGrid>
+  <Card title="TextField" icon="pencil">
+    Material 3 text input with labels, icons, validation states, and keyboard options.
+  </Card>
+  <Card title="Picker" icon="down-caret">
+    Dropdown picker using ExposedDropdownMenuBox for option selection.
+  </Card>
+  <Card title="SheetPicker" icon="magnifier">
+    Searchable picker with a modal bottom sheet, ideal for long lists.
+  </Card>
+  <Card title="DatePicker" icon="seti:clock">
+    Date selection dialog with calendar view and input mode.
+  </Card>
+  <Card title="DateRangePicker" icon="seti:clock">
+    Select a start and end date with range visualization.
+  </Card>
+  <Card title="TimePicker" icon="seti:clock">
+    Time selection with dial or keyboard input, 12/24-hour support.
+  </Card>
+  <Card title="TimeRangePicker" icon="seti:clock">
+    Select a start and end time for scheduling.
+  </Card>
+  <Card title="ModalBottomSheet" icon="document">
+    Draggable bottom sheet container for custom content.
+  </Card>
+</CardGrid>
+
+## Next Steps
+
+<CardGrid>
+  <Card title="Installation" icon="setting">
+    Set up React Native Jetpack Compose in your project.
+    [Get started →](/react-native-jetpack-compose/getting-started/installation/)
+  </Card>
+  <Card title="Quick Start" icon="rocket">
+    Build your first form with native components.
+    [Quick start →](/react-native-jetpack-compose/getting-started/quick-start/)
+  </Card>
+  <Card title="Components" icon="list-format">
+    Explore all available components and their APIs.
+    [Browse components →](/react-native-jetpack-compose/components/)
+  </Card>
+  <Card title="Examples" icon="open-book">
+    See complete working examples and patterns.
+    [View examples →](/react-native-jetpack-compose/examples/contact-form/)
+  </Card>
 </CardGrid>

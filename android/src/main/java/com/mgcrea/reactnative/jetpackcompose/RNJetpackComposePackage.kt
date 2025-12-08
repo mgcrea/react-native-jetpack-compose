@@ -15,6 +15,8 @@ class RNJetpackComposePackage : ReactPackage {
     ModalBottomSheetManager(),
     DatePickerViewManager(),
     DateRangePickerViewManager(),
+    TimePickerViewManager(),
+    TimeRangePickerViewManager(),
     PickerViewManager(),
     SheetPickerViewManager(),
     TextFieldViewManager(),

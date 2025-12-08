@@ -22,7 +22,14 @@ export type SheetPickerOption = {
  */
 export type SheetPickerProps = Omit<
   NativeSheetPickerProps,
-  "options" | "selectedValue" | "autoDismiss" | "maxHeightRatio" | "sheetMaxWidth" | "disabled" | "onItemSelect" | "onDismiss"
+  | "options"
+  | "selectedValue"
+  | "autoDismiss"
+  | "maxHeightRatio"
+  | "sheetMaxWidth"
+  | "disabled"
+  | "onItemSelect"
+  | "onDismiss"
 > & {
   /** Array of selectable options */
   options: SheetPickerOption[];

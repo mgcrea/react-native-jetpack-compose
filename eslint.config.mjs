@@ -8,15 +8,22 @@ const config = [
     },
   },
   {
-    ignores: [".idea/**", "example/**", "test/**"],
+    ignores: [".idea/**", "example/**", "test/**", "jest.setup.js"],
   },
   {
     languageOptions: {
       parserOptions: {
         project: ["./tsconfig.node.json", "./tsconfig.json"],
-        // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
         tsconfigRootDir: import.meta.dirname,
       },
+    },
+  },
+  {
+    files: ["**/*.test.{ts,tsx}"],
+    rules: {
+      "testing-library/prefer-screen-queries": "off",
+      "@typescript-eslint/no-unsafe-member-access": "off",
+      "@typescript-eslint/no-unsafe-return": "off",
     },
   },
 ];

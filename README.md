@@ -43,6 +43,8 @@ Native Jetpack Compose components for React Native using the Fabric renderer. Bu
 - **📱 Wide Compatibility** - Supports Android 7+ (API level 24)
 - **📦 Zero Config** - No complex setup, just install and use
 
+> **Note:** This library is Android-only. For iOS, check out [@mgcrea/react-native-swiftui](https://github.com/mgcrea/react-native-swiftui).
+
 ## Demo
 
 ![demo](./.github/assets/demo.gif)

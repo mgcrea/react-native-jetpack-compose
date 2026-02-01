@@ -3,7 +3,7 @@ title: Components Overview
 description: Overview of all available React Native Jetpack Compose components
 ---
 
-React Native Jetpack Compose provides 8 native Android components built on Jetpack Compose and Material 3.
+React Native Jetpack Compose provides 9 native Android components built on Jetpack Compose and Material 3.
 
 ## Form Inputs
 
@@ -11,6 +11,7 @@ React Native Jetpack Compose provides 8 native Android components built on Jetpa
 |-----------|-------------|
 | [TextField](/react-native-jetpack-compose/components/text-field/) | Material 3 text input with labels, icons, validation, and keyboard options |
 | [Picker](/react-native-jetpack-compose/components/picker/) | Dropdown picker using ExposedDropdownMenuBox |
+| [SegmentedButton](/react-native-jetpack-compose/components/segmented-button/) | Segmented button for single or multi-select choices |
 | [SheetPicker](/react-native-jetpack-compose/components/sheet-picker/) | Searchable picker with a modal bottom sheet |
 
 ## Date & Time
@@ -38,6 +39,7 @@ All components are exported from the main package:
 import {
   TextField,
   Picker,
+  SegmentedButton,
   SheetPicker,
   DatePicker,
   DateRangePicker,

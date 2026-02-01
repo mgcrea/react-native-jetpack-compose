@@ -2,6 +2,7 @@ package com.mgcrea.reactnative.jetpackcompose
 
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.List
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Close
@@ -12,11 +13,9 @@ import androidx.compose.material.icons.filled.Email
 import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.Info
-import androidx.compose.material.icons.filled.List
 import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Phone
-import androidx.compose.material.icons.filled.Remove
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.Share
@@ -107,7 +106,6 @@ internal class SegmentedButtonView(reactContext: ThemedReactContext) :
     "phone" -> Icons.Default.Phone
     "search" -> Icons.Default.Search
     "add" -> Icons.Default.Add
-    "remove" -> Icons.Default.Remove
     "close" -> Icons.Default.Close
     "done" -> Icons.Default.Done
     "edit" -> Icons.Default.Edit
@@ -116,7 +114,7 @@ internal class SegmentedButtonView(reactContext: ThemedReactContext) :
     "info" -> Icons.Default.Info
     "warning" -> Icons.Default.Warning
     "notifications" -> Icons.Default.Notifications
-    "list" -> Icons.Default.List
+    "list" -> Icons.AutoMirrored.Filled.List
     else -> null
   }
 

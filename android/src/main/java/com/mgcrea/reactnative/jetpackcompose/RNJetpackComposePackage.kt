@@ -18,6 +18,7 @@ class RNJetpackComposePackage : ReactPackage {
     TimePickerViewManager(),
     TimeRangePickerViewManager(),
     PickerViewManager(),
+    SegmentedButtonViewManager(),
     SheetPickerViewManager(),
     TextFieldViewManager(),
   )

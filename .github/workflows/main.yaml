@@ -7,13 +7,17 @@ on:
     branches: [master, main]
   workflow_dispatch:
 
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   test:
+    name: Test & Build
     runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        node: ["lts/*"]
-    name: Test on node@v${{ matrix.node }}
     steps:
       - name: Checkout 🛎️
         uses: actions/checkout@v5
@@ -22,7 +26,7 @@ jobs:
       - name: Setup node 🔧
         uses: actions/setup-node@v6
         with:
-          node-version: ${{ matrix.node }}
+          node-version: lts/*
           check-latest: true
           cache: "pnpm"
       - name: Install 🪄
@@ -33,12 +37,21 @@ jobs:
         run: pnpm run check
       - name: Jest 🔍
         run: pnpm run spec
-  build:
+      - name: Build 💎
+        run: pnpm run build
+      - name: Codegen 🧬
+        run: pnpm run codegen
+      - name: Verify tarball 📦
+        run: |
+          set -euo pipefail
+          npm pack --dry-run 2>&1 | tee pack.log
+          grep -q "android/generated/java" pack.log || { echo "::error::android/generated missing from tarball"; exit 1; }
+          if grep -q "\.test\." pack.log; then echo "::error::test files leaked into tarball"; exit 1; fi
+
+  android:
+    name: Android compile
     runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        node: ["lts/*"]
-    name: Build on node@v${{ matrix.node }}
+    needs: test
     steps:
       - name: Checkout 🛎️
         uses: actions/checkout@v5
@@ -47,10 +60,26 @@ jobs:
       - name: Setup node 🔧
         uses: actions/setup-node@v6
         with:
-          node-version: ${{ matrix.node }}
+          node-version: lts/*
           check-latest: true
           cache: "pnpm"
+          cache-dependency-path: |
+            pnpm-lock.yaml
+            example/pnpm-lock.yaml
+      - name: Setup Java ☕
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 17
+      - name: Setup Gradle 🐘
+        uses: gradle/actions/setup-gradle@v4
       - name: Install 🪄
         run: pnpm install --frozen-lockfile
-      - name: Build 💎
-        run: pnpm run build
+      - name: Codegen 🧬
+        run: pnpm run codegen
+      - name: Install example 🪄
+        working-directory: example
+        run: pnpm install --frozen-lockfile
+      - name: Compile library Kotlin 🤖
+        working-directory: example/android
+        run: ./gradlew :mgcrea_react-native-jetpack-compose:compileDebugKotlin --no-daemon

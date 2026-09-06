@@ -7,6 +7,7 @@
   "repository": "github:mgcrea/react-native-jetpack-compose",
   "license": "MIT",
   "type": "commonjs",
+  "sideEffects": false,
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
   "exports": {
@@ -18,8 +19,12 @@
   },
   "files": [
     "src",
+    "!src/**/*.test.*",
     "dist",
-    "android",
+    "android/build.gradle",
+    "android/consumer-rules.pro",
+    "android/src",
+    "android/generated",
     "react-native.config.js"
   ],
   "scripts": {
@@ -27,38 +32,40 @@
     "logcat": "adb logcat --clear && adb logcat -s ReactNative:V ReactNativeJS:V AndroidRuntime:E *:S",
     "codegen": "react-native codegen --platform android --outputPath android/generated",
     "prettify": "prettier --write src/",
-    "build": "npm run build:babel && npm run build:types",
-    "build:babel": "babel src --out-dir dist --extensions \".ts,.tsx,.js,.jsx\" --copy-files",
-    "build:types": "tsc --emitDeclarationOnly",
+    "clean": "rm -rf dist",
+    "build": "npm run clean && npm run build:babel && npm run build:types",
+    "build:babel": "babel src --out-dir dist --extensions \".ts,.tsx,.js,.jsx\" --copy-files --no-copy-ignored --ignore \"src/**/*.test.ts\",\"src/**/*.test.tsx\"",
+    "build:types": "tsc -p tsconfig.build.json --emitDeclarationOnly",
     "lint": "eslint .",
     "check": "tsc --noEmit",
     "spec": "NODE_OPTIONS=--experimental-require-module jest",
     "test": "npm run lint && npm run check && npm run spec",
+    "prepack": "npm run codegen",
     "prepare": "npm run build"
   },
   "peerDependencies": {
     "react": ">=18.2.0",
-    "react-native": ">=0.76.0"
+    "react-native": ">=0.80.0"
   },
   "devDependencies": {
     "@babel/cli": "^7.28.3",
     "@babel/core": "^7.28.5",
     "@babel/runtime": "^7.28.4",
-    "@jest/globals": "^30.2.0",
-    "@mgcrea/eslint-config-react-native": "^0.14.0",
-    "@react-native-community/cli": "^20.0.2",
-    "@react-native/babel-preset": "0.82.1",
-    "@react-native/typescript-config": "0.82.1",
-    "@testing-library/react-native": "^13.3.3",
-    "@types/react": "^19.2.7",
-    "babel-plugin-module-resolver": "^5.0.2",
+    "@jest/globals": "^30.5.1",
+    "@mgcrea/eslint-config-react-native": "^0.14.1",
+    "@react-native-community/cli": "^20.2.0",
+    "@react-native/babel-preset": "0.87.1",
+    "@react-native/jest-preset": "0.87.1",
+    "@react-native/typescript-config": "0.87.1",
+    "@testing-library/react-native": "^14.0.1",
+    "@types/react": "^19.2.18",
     "eslint": "^9.39.1",
-    "jest": "^30.2.0",
-    "prettier": "^3.7.4",
+    "jest": "^30.5.1",
+    "prettier": "^3.9.6",
     "prettier-plugin-organize-imports": "^4.3.0",
-    "react": "^19.2.0",
-    "react-native": "0.82.1",
-    "typescript": "^5.9.3"
+    "react": "^19.2.8",
+    "react-native": "0.87.1",
+    "typescript": "^6.0.3"
   },
   "engines": {
     "node": ">=18"

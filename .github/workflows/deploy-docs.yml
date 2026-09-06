@@ -33,6 +33,7 @@ jobs:
           node-version: "lts/*"
           check-latest: true
           cache: "pnpm"
+          cache-dependency-path: docs/pnpm-lock.yaml
       - name: Install dependencies 🪄
         run: |
           cd docs

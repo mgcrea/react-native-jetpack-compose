@@ -8,7 +8,7 @@ const config = [
     },
   },
   {
-    ignores: [".idea/**", "example/**", "test/**", "docs/**", "jest.setup.js"],
+    ignores: [".idea/**", "example/**", "docs/**", "jest.setup.js"],
   },
   {
     languageOptions: {
@@ -16,6 +16,15 @@ const config = [
         project: ["./tsconfig.node.json", "./tsconfig.json"],
         tsconfigRootDir: import.meta.dirname,
       },
+    },
+  },
+  {
+    // Codegen specs must use `interface` / `T[]` / empty object shapes that codegen understands.
+    files: ["src/native/*NativeComponent.ts"],
+    rules: {
+      "@typescript-eslint/consistent-type-definitions": "off",
+      "@typescript-eslint/array-type": "off",
+      "@typescript-eslint/no-empty-object-type": "off",
     },
   },
   {

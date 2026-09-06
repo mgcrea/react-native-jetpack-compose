@@ -63,7 +63,7 @@ yarn add @mgcrea/react-native-jetpack-compose
 
 ### Requirements
 
-- React Native 0.76.0+ (New Architecture required)
+- React Native 0.80.0+ (New Architecture required)
 - Android API level 24+ (Android 7.0)
 
 ### Basic Usage

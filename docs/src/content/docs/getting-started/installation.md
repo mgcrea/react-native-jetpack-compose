@@ -7,7 +7,7 @@ description: How to install and configure React Native Jetpack Compose
 
 Before installing, ensure your project meets these requirements:
 
-- **React Native**: 0.76.0 or later
+- **React Native**: 0.80.0 or later
 - **New Architecture**: Must be enabled (Fabric)
 - **Android**: API level 24 (Android 7.0) or higher
 - **Node.js**: 18 or later

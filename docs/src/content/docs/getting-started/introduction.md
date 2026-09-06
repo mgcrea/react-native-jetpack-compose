@@ -32,7 +32,7 @@ This library provides Android-only components. For iOS equivalents, see [@mgcrea
 
 ## Requirements
 
-- React Native 0.76.0 or later (New Architecture required)
+- React Native 0.80.0 or later (New Architecture required)
 - Android API level 24 (Android 7.0) or higher
 - Jetpack Compose BOM 2024.02.00 or later (included)
 

@@ -1,17 +1,14 @@
 {
   "extends": "@react-native/typescript-config",
   "compilerOptions": {
+    "jsx": "react-jsx",
     "declaration": true,
     "emitDeclarationOnly": true,
     "resolveJsonModule": true,
     "module": "ESNext",
     "noEmit": false,
     "rootDir": "./src",
-    "outDir": "./dist",
-    "baseUrl": "./",
-    "paths": {
-      "src/*": ["src/*"]
-    }
+    "outDir": "./dist"
   },
   "include": ["src"]
 }

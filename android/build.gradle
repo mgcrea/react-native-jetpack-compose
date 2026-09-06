@@ -1,10 +1,10 @@
 buildscript {
+  ext.kotlinVersion = rootProject.ext.has('kotlinVersion') ? rootProject.ext.get('kotlinVersion') : '2.1.20'
   repositories {
     google()
     mavenCentral()
   }
   dependencies {
-    def kotlinVersion = rootProject.ext.has('kotlinVersion') ? rootProject.ext.get('kotlinVersion') : '2.0.21'
     classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlinVersion"
     classpath "org.jetbrains.kotlin.plugin.compose:org.jetbrains.kotlin.plugin.compose.gradle.plugin:$kotlinVersion"
   }
@@ -12,10 +12,6 @@ buildscript {
 
 def safeExtGet(prop, fallback) {
   return rootProject.ext.has(prop) ? rootProject.ext.get(prop) : fallback
-}
-
-def isNewArchitectureEnabled() {
-  return project.hasProperty("newArchEnabled") && project.newArchEnabled == "true"
 }
 
 plugins {
@@ -28,22 +24,12 @@ apply plugin: 'com.facebook.react'
 
 android {
   namespace 'com.mgcrea.reactnative.jetpackcompose'
-  compileSdk safeExtGet('compileSdkVersion', 35)
+  compileSdk safeExtGet('compileSdkVersion', 36)
 
   defaultConfig {
     minSdkVersion safeExtGet('minSdkVersion', 24)
-    targetSdkVersion safeExtGet('targetSdkVersion', 35)
+    targetSdkVersion safeExtGet('targetSdkVersion', 36)
     consumerProguardFiles 'consumer-rules.pro'
-
-    if (isNewArchitectureEnabled()) {
-      buildConfigField "boolean", "IS_NEW_ARCHITECTURE_ENABLED", "true"
-      ndk {
-        def architectures = project.hasProperty("reactNativeArchitectures")
-          ? project.getProperty("reactNativeArchitectures").split(",")
-          : ["armeabi-v7a", "arm64-v8a", "x86", "x86_64"]
-        abiFilters (*architectures)
-      }
-    }
   }
 
   sourceSets {
@@ -57,28 +43,27 @@ android {
     targetCompatibility JavaVersion.VERSION_17
   }
 
-  kotlinOptions {
-    jvmTarget = '17'
-  }
-
   buildFeatures {
     compose = true
   }
 }
 
+kotlin {
+  compilerOptions {
+    jvmTarget.set(org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_17)
+  }
+}
+
 dependencies {
   implementation 'com.facebook.react:react-android'
-  implementation "org.jetbrains.kotlin:kotlin-stdlib:${safeExtGet('kotlinVersion', '2.0.21')}"
 
   // Material Components (for BottomSheetDialog)
-  implementation 'com.google.android.material:material:1.11.0'
+  implementation 'com.google.android.material:material:1.14.0'
 
-  // Jetpack Compose dependencies
-  def composeBom = platform('androidx.compose:compose-bom:2024.09.00')
-  implementation composeBom
+  // Jetpack Compose (versions pinned by the BOM)
+  implementation platform('androidx.compose:compose-bom:2026.08.00')
   implementation 'androidx.compose.ui:ui'
-  implementation 'androidx.compose.ui:ui-tooling-preview'
   implementation 'androidx.compose.material3:material3'
-  implementation 'androidx.activity:activity-compose:1.8.2'
-  debugImplementation 'androidx.compose.ui:ui-tooling'
+  // Core icon set only; the extended artifact is deliberately avoided (see ui/MaterialIcons.kt)
+  implementation 'androidx.compose.material:material-icons-core'
 }

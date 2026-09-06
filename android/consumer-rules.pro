@@ -3,10 +3,5 @@
 # Keep the React Native package class (required for auto-linking)
 -keep class com.mgcrea.reactnative.jetpackcompose.RNJetpackComposePackage { *; }
 
-# Keep ViewManagers (required for React Native bridge)
--keep class com.mgcrea.reactnative.jetpackcompose.ColorViewManager { *; }
--keep class com.mgcrea.reactnative.jetpackcompose.ModalBottomSheetManager { *; }
-
-# Keep View classes (instantiated by ViewManagers)
--keep class com.mgcrea.reactnative.jetpackcompose.ColorView { *; }
--keep class com.mgcrea.reactnative.jetpackcompose.ModalBottomSheetView { *; }
+# Keep ViewManagers (looked up by name through the generated codegen delegates)
+-keep class com.mgcrea.reactnative.jetpackcompose.**Manager { *; }

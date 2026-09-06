@@ -16,9 +16,9 @@ import androidx.savedstate.SavedStateRegistryController
 import androidx.savedstate.SavedStateRegistryOwner
 import androidx.savedstate.setViewTreeSavedStateRegistryOwner
 import com.facebook.react.uimanager.ThemedReactContext
-import com.facebook.react.uimanager.UIManagerHelper
 import com.facebook.react.uimanager.events.Event
 import com.facebook.react.uimanager.events.EventDispatcher
+import com.mgcrea.reactnative.jetpackcompose.ui.ComposeTheme
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.launch
@@ -30,12 +30,12 @@ import kotlinx.coroutines.launch
  * React Native's view hierarchy. Creates its own LifecycleOwner since
  * ReactActivity is not a ComponentActivity.
  *
- * Subclasses implement [ComposeContent] to provide the Composable content.
+ * Subclasses implement [ComposeContent] to provide the Composable content,
+ * which is rendered inside [ComposeTheme].
  */
 abstract class InlineComposeView(
   protected val reactContext: ThemedReactContext,
-  private val tag: String
-) : FrameLayout(reactContext), LifecycleOwner, SavedStateRegistryOwner {
+) : FrameLayout(reactContext), LifecycleOwner, SavedStateRegistryOwner, ReactHostView {
 
   private var composeView: ComposeView? = null
 
@@ -47,11 +47,11 @@ abstract class InlineComposeView(
   override val savedStateRegistry: SavedStateRegistry get() = savedStateRegistryController.savedStateRegistry
 
   private var recomposerScope: CoroutineScope? = null
+  private val setupRunnable = Runnable { if (isAttachedToWindow && !isDetached) setupComposeView() }
 
-  /** Event dispatcher for Fabric events, set by ViewManager */
-  var eventDispatcher: EventDispatcher? = null
+  override var eventDispatcher: EventDispatcher? = null
 
-  /** Flag to track if view has been detached - used to prevent use-after-free crashes */
+  /** Flag to track if view has been dropped - used to prevent use-after-free crashes */
   @Volatile
   protected var isDetached: Boolean = false
     private set
@@ -71,36 +71,32 @@ abstract class InlineComposeView(
   override fun onAttachedToWindow() {
     super.onAttachedToWindow()
     // Resume lifecycle - after ON_STOP event, state goes back to CREATED
-    val state = lifecycleRegistry.currentState
-    if (state == Lifecycle.State.CREATED) {
+    if (lifecycleRegistry.currentState == Lifecycle.State.CREATED) {
       lifecycleRegistry.handleLifecycleEvent(Lifecycle.Event.ON_START)
     }
     if (lifecycleRegistry.currentState == Lifecycle.State.STARTED) {
       lifecycleRegistry.handleLifecycleEvent(Lifecycle.Event.ON_RESUME)
     }
-    // Set up ComposeView only once, on first attach
+    // Set up ComposeView only once, on first attach.
+    // Posted to ensure we're fully attached and the window is ready.
     if (composeView == null) {
-      // Post to ensure we're fully attached and window is ready
-      post {
-        if (isAttachedToWindow) {
-          setupComposeView()
-        }
-      }
+      post(setupRunnable)
     }
   }
 
   override fun onLayout(changed: Boolean, left: Int, top: Int, right: Int, bottom: Int) {
     super.onLayout(changed, left, top, right, bottom)
-    // Ensure ComposeView fills the available space from React Native layout
-    composeView?.let { view ->
-      val width = right - left
-      val height = bottom - top
-      view.measure(
-        MeasureSpec.makeMeasureSpec(width, MeasureSpec.EXACTLY),
-        MeasureSpec.makeMeasureSpec(height, MeasureSpec.AT_MOST)
-      )
-      view.layout(0, 0, width, view.measuredHeight)
-    }
+    // React Native lays this view out directly without a measure pass, so size the
+    // ComposeView ourselves to the space Yoga gave us.
+    composeView?.let { measureAndLayoutChild(it, right - left, bottom - top) }
+  }
+
+  private fun measureAndLayoutChild(view: ComposeView, width: Int, height: Int) {
+    view.measure(
+      MeasureSpec.makeMeasureSpec(width, MeasureSpec.EXACTLY),
+      MeasureSpec.makeMeasureSpec(height, MeasureSpec.AT_MOST),
+    )
+    view.layout(0, 0, width, view.measuredHeight)
   }
 
   private fun setupComposeView() {
@@ -118,23 +114,20 @@ abstract class InlineComposeView(
       recomposer.runRecomposeAndApplyChanges()
     }
 
-    composeView = ComposeView(context).apply {
+    val view = ComposeView(context).apply {
       // Set composition context to our recomposer
       compositionContext = recomposer
-      setContent { ComposeContent() }
+      setContent { ComposeTheme { ComposeContent() } }
     }
-    addView(composeView, LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.WRAP_CONTENT))
+    composeView = view
+    addView(view, LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.WRAP_CONTENT))
 
     // Manually measure and layout the ComposeView using this view's current dimensions
     // This is necessary because React Native doesn't always trigger onLayout after adding child views
     val width = measuredWidth
     val height = measuredHeight
     if (width > 0 && height > 0) {
-      composeView?.measure(
-        MeasureSpec.makeMeasureSpec(width, MeasureSpec.EXACTLY),
-        MeasureSpec.makeMeasureSpec(height, MeasureSpec.AT_MOST)
-      )
-      composeView?.layout(0, 0, width, composeView?.measuredHeight ?: 0)
+      measureAndLayoutChild(view, width, height)
     }
   }
 
@@ -142,9 +135,10 @@ abstract class InlineComposeView(
    * Called by ViewManager's onDropViewInstance before the view is destroyed.
    * Performs early cleanup to prevent use-after-free crashes in C++ props destructors.
    */
-  open fun onDropInstance() {
+  override fun onDropInstance() {
     // Set detached flag first to prevent use-after-free crashes
     isDetached = true
+    removeCallbacks(setupRunnable)
     // Clear event dispatcher to prevent events during cleanup
     eventDispatcher = null
     // Full lifecycle cleanup
@@ -170,15 +164,15 @@ abstract class InlineComposeView(
 
   /**
    * Dispatches an event to JavaScript using the Fabric event system.
-   * Posts the event to the main thread to ensure it happens OUTSIDE
-   * the Compose recomposition cycle, avoiding heap corruption in Fabric
-   * Props destructors.
    *
-   * Safely ignores dispatch if the view has been detached to prevent use-after-free crashes.
+   * Deliberately posted to the main handler rather than dispatched inline: callbacks
+   * run inside Compose's recomposition/apply pass, and dispatching from there let
+   * Fabric tear down props while Compose still referenced them (heap corruption in
+   * the C++ Props destructors). One Handler message per event is the price.
    *
-   * @param event The event to dispatch
+   * Safely ignores dispatch if the view has been dropped to prevent use-after-free crashes.
    */
-  protected fun dispatchEvent(event: Event<*>) {
+  override fun dispatchEvent(event: Event<*>) {
     if (isDetached) return
     val dispatcher = eventDispatcher ?: return
     post {
@@ -187,9 +181,4 @@ abstract class InlineComposeView(
       }
     }
   }
-
-  /**
-   * Gets the surface ID for event dispatching.
-   */
-  protected fun getSurfaceId(): Int = UIManagerHelper.getSurfaceId(this)
 }

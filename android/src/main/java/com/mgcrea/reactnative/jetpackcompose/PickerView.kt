@@ -3,116 +3,86 @@ package com.mgcrea.reactnative.jetpackcompose
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.ExposedDropdownMenuAnchorType
 import androidx.compose.material3.ExposedDropdownMenuBox
 import androidx.compose.material3.ExposedDropdownMenuDefaults
-import androidx.compose.material3.MenuAnchorType
-import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
-import com.facebook.react.bridge.ReadableArray
 import com.facebook.react.uimanager.ThemedReactContext
 import com.mgcrea.reactnative.jetpackcompose.core.InlineComposeView
-import com.mgcrea.reactnative.jetpackcompose.events.ValueChangeEvent
+import com.mgcrea.reactnative.jetpackcompose.core.Option
+import com.mgcrea.reactnative.jetpackcompose.core.emitEvent
+import com.mgcrea.reactnative.jetpackcompose.events.EventNames
+import com.mgcrea.reactnative.jetpackcompose.ui.PickerTextField
 
+/**
+ * Dropdown picker backed by Material3's [ExposedDropdownMenuBox].
+ */
 @OptIn(ExperimentalMaterial3Api::class)
-internal class PickerView(reactContext: ThemedReactContext) :
-  InlineComposeView(reactContext, TAG) {
+internal class PickerView(reactContext: ThemedReactContext) : InlineComposeView(reactContext) {
 
-  companion object {
-    private const val TAG = "PickerView"
-  }
+  var items: List<Option> by mutableStateOf(emptyList())
+  var selectedValue: String? by mutableStateOf(null)
+  var label: String? by mutableStateOf(null)
+  var placeholder: String? by mutableStateOf(null)
+  var disabled: Boolean by mutableStateOf(false)
 
-  // State backing for Compose
-  private val _items = mutableStateOf<List<PickerOption>>(emptyList())
-  private val _selectedValue = mutableStateOf<String?>(null)
-  private val _label = mutableStateOf<String?>(null)
-  private val _placeholder = mutableStateOf<String?>(null)
-  private val _disabled = mutableStateOf(false)
-  private var _expanded by mutableStateOf(false)
+  private var expanded by mutableStateOf(false)
 
-  // Property setters called by ViewManager
-  fun setItems(array: ReadableArray?) {
-    _items.value = array?.let { arr ->
-      List(arr.size()) { i ->
-        val map = arr.getMap(i)
-        PickerOption(
-          value = map?.getString("value") ?: "",
-          label = map?.getString("label") ?: map?.getString("value") ?: ""
-        )
-      }
-    } ?: emptyList()
-  }
-
-  fun setSelectedValue(value: String?) {
-    _selectedValue.value = value
-  }
-
-  fun setLabel(value: String?) {
-    _label.value = value
-  }
-
-  fun setPlaceholder(value: String?) {
-    _placeholder.value = value
-  }
-
-  fun setDisabled(value: Boolean) {
-    _disabled.value = value
+  override fun onDropInstance() {
+    expanded = false
+    super.onDropInstance()
   }
 
   @Composable
   override fun ComposeContent() {
-    val items = _items.value
-    val selectedValue = _selectedValue.value
-    val label = _label.value
-    val placeholder = _placeholder.value
-    val disabled = _disabled.value
-
-    val selectedItem = items.find { it.value == selectedValue }
+    val items = items
+    val selectedValue = selectedValue
+    val selectedLabel = remember(items, selectedValue) {
+      items.firstOrNull { it.value == selectedValue }?.label ?: ""
+    }
 
     ExposedDropdownMenuBox(
-      expanded = _expanded,
-      onExpandedChange = { if (!disabled) _expanded = it }
+      expanded = expanded,
+      onExpandedChange = { if (!disabled) expanded = it },
     ) {
-      OutlinedTextField(
-        modifier = Modifier
-          .menuAnchor(MenuAnchorType.PrimaryNotEditable, enabled = !disabled)
-          .fillMaxWidth(),
-        value = selectedItem?.label ?: "",
-        onValueChange = {},
-        readOnly = true,
-        singleLine = true,
+      PickerTextField(
+        value = selectedLabel,
+        label = label,
+        placeholder = placeholder,
         enabled = !disabled,
-        label = label?.let { { Text(it) } },
-        placeholder = placeholder?.let { { Text(it, maxLines = 1) } },
-        trailingIcon = {
-          ExposedDropdownMenuDefaults.TrailingIcon(expanded = _expanded)
-        },
-        colors = ExposedDropdownMenuDefaults.outlinedTextFieldColors()
+        trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded) },
+        modifier = Modifier
+          .menuAnchor(ExposedDropdownMenuAnchorType.PrimaryNotEditable, enabled = !disabled)
+          .fillMaxWidth(),
+        colors = ExposedDropdownMenuDefaults.outlinedTextFieldColors(),
       )
 
       ExposedDropdownMenu(
-        expanded = _expanded,
-        onDismissRequest = { _expanded = false }
+        expanded = expanded,
+        onDismissRequest = { expanded = false },
       ) {
         items.forEachIndexed { index, item ->
           DropdownMenuItem(
             text = { Text(item.label) },
             onClick = {
-              _expanded = false
+              expanded = false
               if (item.value != selectedValue) {
-                dispatchEvent(ValueChangeEvent(getSurfaceId(), id, item.value, index))
+                emitEvent(EventNames.VALUE_CHANGE) {
+                  putString("value", item.value)
+                  putDouble("index", index.toDouble())
+                }
               }
             },
-            contentPadding = ExposedDropdownMenuDefaults.ItemContentPadding
+            contentPadding = ExposedDropdownMenuDefaults.ItemContentPadding,
           )
         }
       }
     }
   }
-
-  data class PickerOption(val value: String, val label: String)
 }

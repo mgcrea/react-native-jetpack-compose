@@ -4,7 +4,6 @@ import android.app.Dialog
 import android.util.Log
 import com.facebook.react.bridge.UiThreadUtil
 import com.facebook.react.uimanager.ThemedReactContext
-import com.facebook.react.uimanager.UIManagerHelper
 import com.facebook.react.uimanager.events.Event
 import com.facebook.react.uimanager.events.EventDispatcher
 import com.facebook.react.views.view.ReactViewGroup
@@ -23,17 +22,23 @@ import com.facebook.react.views.view.ReactViewGroup
  */
 abstract class DialogHostView(
   protected val reactContext: ThemedReactContext,
-  private val tag: String
-) : ReactViewGroup(reactContext) {
+  private val tag: String,
+) : ReactViewGroup(reactContext), ReactHostView {
 
   protected var dialog: Dialog? = null
   protected var isVisible = false
     private set
 
-  /** Event dispatcher for Fabric events, set by ViewManager */
-  var eventDispatcher: EventDispatcher? = null
+  /** Set when the view is detached while showing, so the dialog comes back on reattach. */
+  private var wasVisibleOnDetach = false
 
-  /** Flag to track if view has been detached - used to prevent use-after-free crashes */
+  override var eventDispatcher: EventDispatcher? = null
+    set(value) {
+      field = value
+      onEventDispatcherChanged(value)
+    }
+
+  /** Flag to track if view has been dropped - used to prevent use-after-free crashes */
   @Volatile
   protected var isDetached: Boolean = false
     private set
@@ -70,13 +75,19 @@ abstract class DialogHostView(
    */
   protected open fun onDialogDismiss() {}
 
+  /**
+   * Called whenever [eventDispatcher] changes. Override to forward the dispatcher to
+   * a child RootView that lives in the dialog window.
+   */
+  protected open fun onEventDispatcherChanged(dispatcher: EventDispatcher?) {}
+
   private fun showDialog() {
-    val activity = reactContext.currentActivity ?: run {
+    if (reactContext.currentActivity == null) {
       Log.w(tag, "Cannot show dialog: no current activity")
       return
     }
-    dialog = dialog ?: createDialog()
-    dialog?.show()
+    val dialog = dialog ?: createDialog().also { dialog = it }
+    dialog.show()
     onDialogShow()
   }
 
@@ -96,37 +107,41 @@ abstract class DialogHostView(
    * Called by ViewManager's onDropViewInstance before the view is destroyed.
    * Performs early cleanup to prevent use-after-free crashes in C++ props destructors.
    */
-  open fun onDropInstance() {
+  override fun onDropInstance() {
     // Set detached flag first to prevent use-after-free crashes
     isDetached = true
     // Clear event dispatcher to prevent events during cleanup
     eventDispatcher = null
+    isVisible = false
+    dialog?.dismiss()
+    dialog = null
   }
 
   /**
    * Dispatches an event to JavaScript using the Fabric event system.
-   * Safely ignores dispatch if the view has been detached to prevent use-after-free crashes.
-   *
-   * @param event The event to dispatch
+   * Dispatched synchronously: dialog callbacks run from the dialog window, outside any
+   * Compose apply pass, so the deferral [InlineComposeView] needs does not apply here.
+   * Safely ignores dispatch if the view has been dropped to prevent use-after-free crashes.
    */
-  protected fun dispatchEvent(event: Event<*>) {
+  override fun dispatchEvent(event: Event<*>) {
     if (isDetached) return
     eventDispatcher?.dispatchEvent(event)
   }
 
-  /**
-   * Gets the surface ID for event dispatching.
-   */
-  protected fun getSurfaceId(): Int = UIManagerHelper.getSurfaceId(this)
+  override fun onAttachedToWindow() {
+    super.onAttachedToWindow()
+    // Restore a dialog that was showing when the host was detached (e.g. navigation)
+    if (wasVisibleOnDetach && !isDetached) {
+      wasVisibleOnDetach = false
+      setVisible(true)
+    }
+  }
 
   override fun onDetachedFromWindow() {
     super.onDetachedFromWindow()
-    // Ensure cleanup is done even if onDropInstance wasn't called
-    if (!isDetached) {
-      isDetached = true
-      eventDispatcher = null
-    }
-    // Mark as not visible to prevent dismiss events
+    // The host may be reattached during navigation, so keep the dispatcher; only the
+    // dialog window has to go. Mark not visible first so the dismiss listener stays quiet.
+    wasVisibleOnDetach = isVisible
     isVisible = false
     dialog?.dismiss()
     dialog = null

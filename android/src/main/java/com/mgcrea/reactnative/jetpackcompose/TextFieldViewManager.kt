@@ -1,103 +1,82 @@
 package com.mgcrea.reactnative.jetpackcompose
 
-import com.facebook.react.module.annotations.ReactModule
-import com.facebook.react.uimanager.SimpleViewManager
-import com.facebook.react.uimanager.ThemedReactContext
-import com.facebook.react.uimanager.UIManagerHelper
 import com.facebook.react.uimanager.ViewManagerDelegate
 import com.facebook.react.viewmanagers.TextFieldViewManagerDelegate
 import com.facebook.react.viewmanagers.TextFieldViewManagerInterface
+import com.mgcrea.reactnative.jetpackcompose.core.BaseComposeViewManager
 
-@ReactModule(name = TextFieldViewManager.NAME)
 internal class TextFieldViewManager :
-  SimpleViewManager<TextFieldView>(),
+  BaseComposeViewManager<TextFieldView>(NAME, ::TextFieldView),
   TextFieldViewManagerInterface<TextFieldView> {
 
-  private val delegate: ViewManagerDelegate<TextFieldView> =
-    TextFieldViewManagerDelegate(this)
-
-  override fun getName(): String = NAME
-
-  override fun createViewInstance(context: ThemedReactContext): TextFieldView =
-    TextFieldView(context)
-
-  override fun getDelegate(): ViewManagerDelegate<TextFieldView> = delegate
-
-  override fun onDropViewInstance(view: TextFieldView) {
-    super.onDropViewInstance(view)
-    view.onDropInstance()
-  }
-
-  override fun addEventEmitters(reactContext: ThemedReactContext, view: TextFieldView) {
-    view.eventDispatcher = UIManagerHelper.getEventDispatcherForReactTag(reactContext, view.id)
-  }
+  override fun createDelegate(): ViewManagerDelegate<TextFieldView> = TextFieldViewManagerDelegate(this)
 
   override fun setValue(view: TextFieldView, value: String?) {
-    view.setValue(value)
+    view.value = value ?: ""
   }
 
   override fun setLabel(view: TextFieldView, value: String?) {
-    view.setLabel(value)
+    view.label = value
   }
 
   override fun setPlaceholder(view: TextFieldView, value: String?) {
-    view.setPlaceholder(value)
+    view.placeholder = value
   }
 
   override fun setDisabled(view: TextFieldView, value: Boolean) {
-    view.setDisabled(value)
+    view.disabled = value
   }
 
   override fun setEditable(view: TextFieldView, value: Boolean) {
-    view.setEditable(value)
+    view.editable = value
   }
 
   override fun setMultiline(view: TextFieldView, value: Boolean) {
-    view.setMultiline(value)
+    view.multiline = value
   }
 
   override fun setMaxLength(view: TextFieldView, value: Double) {
-    view.setMaxLength(value)
+    view.maxLength = value.toInt().takeIf { it > 0 }
   }
 
   override fun setSecureTextEntry(view: TextFieldView, value: Boolean) {
-    view.setSecureTextEntry(value)
+    view.secureTextEntry = value
   }
 
   override fun setError(view: TextFieldView, value: Boolean) {
-    view.setError(value)
+    view.error = value
   }
 
   override fun setHelperText(view: TextFieldView, value: String?) {
-    view.setHelperText(value)
+    view.helperText = value
   }
 
   override fun setKeyboardType(view: TextFieldView, value: String?) {
-    view.setKeyboardType(value)
+    view.keyboardType = value ?: "default"
   }
 
   override fun setReturnKeyType(view: TextFieldView, value: String?) {
-    view.setReturnKeyType(value)
+    view.returnKeyType = value ?: "done"
   }
 
   override fun setAutoCapitalize(view: TextFieldView, value: String?) {
-    view.setAutoCapitalize(value)
+    view.autoCapitalize = value ?: "sentences"
   }
 
   override fun setAutoCorrect(view: TextFieldView, value: Boolean) {
-    view.setAutoCorrect(value)
+    view.autoCorrect = value
   }
 
   override fun setLeadingIcon(view: TextFieldView, value: String?) {
-    view.setLeadingIcon(value)
+    view.leadingIcon = value
   }
 
   override fun setTrailingIcon(view: TextFieldView, value: String?) {
-    view.setTrailingIcon(value)
+    view.trailingIcon = value
   }
 
   override fun setShowCounter(view: TextFieldView, value: Boolean) {
-    view.setShowCounter(value)
+    view.showCounter = value
   }
 
   companion object {

@@ -1,93 +1,75 @@
 package com.mgcrea.reactnative.jetpackcompose
 
-import com.facebook.react.uimanager.SimpleViewManager
-import com.facebook.react.uimanager.ThemedReactContext
-import com.facebook.react.uimanager.UIManagerHelper
 import com.facebook.react.uimanager.ViewManagerDelegate
 import com.facebook.react.viewmanagers.DateRangePickerViewManagerDelegate
 import com.facebook.react.viewmanagers.DateRangePickerViewManagerInterface
+import com.mgcrea.reactnative.jetpackcompose.core.BaseComposeViewManager
+import com.mgcrea.reactnative.jetpackcompose.core.orNullIfUnset
 
 internal class DateRangePickerViewManager :
-  SimpleViewManager<DateRangePickerView>(),
+  BaseComposeViewManager<DateRangePickerView>(NAME, ::DateRangePickerView),
   DateRangePickerViewManagerInterface<DateRangePickerView> {
 
-  private val delegate: ViewManagerDelegate<DateRangePickerView> =
-    DateRangePickerViewManagerDelegate(this)
-
-  override fun getName(): String = NAME
-
-  override fun createViewInstance(context: ThemedReactContext): DateRangePickerView =
-    DateRangePickerView(context)
-
-  override fun getDelegate(): ViewManagerDelegate<DateRangePickerView> = delegate
-
-  override fun onDropViewInstance(view: DateRangePickerView) {
-    super.onDropViewInstance(view)
-    view.onDropInstance()
-  }
-
-  override fun addEventEmitters(reactContext: ThemedReactContext, view: DateRangePickerView) {
-    view.eventDispatcher = UIManagerHelper.getEventDispatcherForReactTag(reactContext, view.id)
-  }
+  override fun createDelegate(): ViewManagerDelegate<DateRangePickerView> = DateRangePickerViewManagerDelegate(this)
 
   override fun setStartDateMillis(view: DateRangePickerView, value: Double) {
-    view.setStartDateMillis(value)
+    view.startDateMillis = value.orNullIfUnset()?.toLong()
   }
 
   override fun setEndDateMillis(view: DateRangePickerView, value: Double) {
-    view.setEndDateMillis(value)
+    view.endDateMillis = value.orNullIfUnset()?.toLong()
   }
 
   override fun setInitialDisplayedMonthMillis(view: DateRangePickerView, value: Double) {
-    view.setInitialDisplayedMonthMillis(value)
+    view.initialDisplayedMonthMillis = value.orNullIfUnset()?.toLong()
   }
 
   override fun setMinDateMillis(view: DateRangePickerView, value: Double) {
-    view.setMinDateMillis(value)
+    view.minDateMillis = value.orNullIfUnset()?.toLong()
   }
 
   override fun setMaxDateMillis(view: DateRangePickerView, value: Double) {
-    view.setMaxDateMillis(value)
+    view.maxDateMillis = value.orNullIfUnset()?.toLong()
   }
 
   override fun setYearRangeStart(view: DateRangePickerView, value: Double) {
-    view.setYearRangeStart(value)
+    view.yearRangeStart = value.orNullIfUnset()?.toInt()
   }
 
   override fun setYearRangeEnd(view: DateRangePickerView, value: Double) {
-    view.setYearRangeEnd(value)
+    view.yearRangeEnd = value.orNullIfUnset()?.toInt()
   }
 
   override fun setInitialDisplayMode(view: DateRangePickerView, value: String?) {
-    view.setInitialDisplayMode(value)
+    view.initialDisplayMode = value
   }
 
   override fun setShowModeToggle(view: DateRangePickerView, value: Boolean) {
-    view.setShowModeToggle(value)
+    view.showModeToggle = value
   }
 
   override fun setConfirmLabel(view: DateRangePickerView, value: String?) {
-    view.setConfirmLabel(value)
+    view.confirmLabel = value
   }
 
   override fun setCancelLabel(view: DateRangePickerView, value: String?) {
-    view.setCancelLabel(value)
+    view.cancelLabel = value
   }
 
   override fun setTitleText(view: DateRangePickerView, value: String?) {
-    view.setTitleText(value)
+    view.titleText = value
   }
 
   override fun setLabel(view: DateRangePickerView, value: String?) {
-    view.setLabel(value)
+    view.label = value
   }
 
   override fun setPlaceholder(view: DateRangePickerView, value: String?) {
-    view.setPlaceholder(value)
+    view.placeholder = value
   }
 
   override fun setDisabled(view: DateRangePickerView, value: Boolean) {
-    view.setDisabled(value)
+    view.disabled = value
   }
 
   companion object {

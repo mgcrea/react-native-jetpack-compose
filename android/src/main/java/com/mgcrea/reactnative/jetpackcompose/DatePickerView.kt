@@ -1,256 +1,104 @@
 package com.mgcrea.reactnative.jetpackcompose
 
-import androidx.compose.foundation.interaction.MutableInteractionSource
-import androidx.compose.foundation.interaction.PressInteraction
-import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.DateRange
 import androidx.compose.material3.DatePicker
 import androidx.compose.material3.DatePickerDialog
+import androidx.compose.material3.DatePickerState
 import androidx.compose.material3.DisplayMode
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
-import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.SelectableDates
-import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
-import androidx.compose.material3.rememberDatePickerState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
-import androidx.compose.ui.Modifier
+import androidx.compose.runtime.snapshotFlow
 import com.facebook.react.uimanager.ThemedReactContext
-import com.mgcrea.reactnative.jetpackcompose.core.InlineComposeView
-import com.mgcrea.reactnative.jetpackcompose.events.CancelEvent
-import com.mgcrea.reactnative.jetpackcompose.events.ConfirmEvent
-import com.mgcrea.reactnative.jetpackcompose.events.DateChangeEvent
-import java.text.SimpleDateFormat
-import java.util.Date
+import com.mgcrea.reactnative.jetpackcompose.core.DateTimeFormat
+import com.mgcrea.reactnative.jetpackcompose.core.DialogPickerView
+import com.mgcrea.reactnative.jetpackcompose.core.emitEvent
+import com.mgcrea.reactnative.jetpackcompose.events.EventNames
+import com.mgcrea.reactnative.jetpackcompose.ui.DEFAULT_YEAR_RANGE
+import com.mgcrea.reactnative.jetpackcompose.ui.PickerTextField
+import com.mgcrea.reactnative.jetpackcompose.ui.selectableDates
 import java.util.Locale
+import kotlinx.coroutines.flow.drop
 
+/**
+ * Read-only field that opens a Material3 [DatePickerDialog].
+ */
 @OptIn(ExperimentalMaterial3Api::class)
-internal class DatePickerView(reactContext: ThemedReactContext) :
-  InlineComposeView(reactContext, TAG) {
+internal class DatePickerView(reactContext: ThemedReactContext) : DialogPickerView(reactContext) {
 
-  companion object {
-    private const val TAG = "DatePickerView"
-  }
-
-  // State backing for Compose
-  private val _selectedDateMillis = mutableStateOf<Long?>(null)
-  private val _initialDisplayedMonthMillis = mutableStateOf<Long?>(null)
-  private val _minDateMillis = mutableStateOf<Long?>(null)
-  private val _maxDateMillis = mutableStateOf<Long?>(null)
-  private val _yearRangeStart = mutableStateOf<Int?>(null)
-  private val _yearRangeEnd = mutableStateOf<Int?>(null)
-  private val _initialDisplayMode = mutableStateOf("picker")
-  private val _showModeToggle = mutableStateOf(true)
-  private val _confirmLabel = mutableStateOf<String?>(null)
-  private val _cancelLabel = mutableStateOf<String?>(null)
-  private val _titleText = mutableStateOf<String?>(null)
-
-  // New state for OutlinedTextField
-  private val _label = mutableStateOf<String?>(null)
-  private val _placeholder = mutableStateOf<String?>(null)
-  private val _disabled = mutableStateOf(false)
-  private var _showDialog by mutableStateOf(false)
-
-  // Date formatting
-  private val dateFormat = SimpleDateFormat.getDateInstance(SimpleDateFormat.MEDIUM, Locale.getDefault())
-
-  private fun formatDate(millis: Long?): String {
-    return millis?.let { dateFormat.format(Date(it)) } ?: ""
-  }
-
-  // Property setters called by ViewManager
-  fun setSelectedDateMillis(value: Double?) {
-    _selectedDateMillis.value = value?.toLong()
-  }
-
-  fun setInitialDisplayedMonthMillis(value: Double?) {
-    _initialDisplayedMonthMillis.value = value?.toLong()
-  }
-
-  fun setMinDateMillis(value: Double?) {
-    _minDateMillis.value = value?.toLong()
-  }
-
-  fun setMaxDateMillis(value: Double?) {
-    _maxDateMillis.value = value?.toLong()
-  }
-
-  fun setYearRangeStart(value: Double?) {
-    _yearRangeStart.value = value?.toInt()
-  }
-
-  fun setYearRangeEnd(value: Double?) {
-    _yearRangeEnd.value = value?.toInt()
-  }
-
-  fun setInitialDisplayMode(value: String?) {
-    _initialDisplayMode.value = value ?: "picker"
-  }
-
-  fun setShowModeToggle(value: Boolean) {
-    _showModeToggle.value = value
-  }
-
-  fun setConfirmLabel(value: String?) {
-    _confirmLabel.value = value
-  }
-
-  fun setCancelLabel(value: String?) {
-    _cancelLabel.value = value
-  }
-
-  fun setTitleText(value: String?) {
-    _titleText.value = value
-  }
-
-  fun setLabel(value: String?) {
-    _label.value = value
-  }
-
-  fun setPlaceholder(value: String?) {
-    _placeholder.value = value
-  }
-
-  fun setDisabled(value: Boolean) {
-    _disabled.value = value
-  }
+  var selectedDateMillis: Long? by mutableStateOf(null)
+  var initialDisplayedMonthMillis: Long? by mutableStateOf(null)
+  var minDateMillis: Long? by mutableStateOf(null)
+  var maxDateMillis: Long? by mutableStateOf(null)
+  var yearRangeStart: Int? by mutableStateOf(null)
+  var yearRangeEnd: Int? by mutableStateOf(null)
 
   @Composable
   override fun ComposeContent() {
-    val disabled = _disabled.value
-    val label = _label.value
-    val placeholder = _placeholder.value
-    val showModeToggle = _showModeToggle.value
-
-    // Build year range
-    val yearRange = remember(_yearRangeStart.value, _yearRangeEnd.value) {
-      val start = _yearRangeStart.value ?: 1900
-      val end = _yearRangeEnd.value ?: 2100
-      start..end
+    // Picker state lives only while the dialog is open, so it always starts from current props
+    val state = if (showDialog) {
+      remember {
+        val years = (yearRangeStart ?: DEFAULT_YEAR_RANGE.first)..(yearRangeEnd ?: DEFAULT_YEAR_RANGE.last)
+        DatePickerState(
+          locale = Locale.getDefault(),
+          initialSelectedDateMillis = selectedDateMillis,
+          initialDisplayedMonthMillis = initialDisplayedMonthMillis ?: selectedDateMillis,
+          yearRange = years,
+          initialDisplayMode = if (startsInInputMode) DisplayMode.Input else DisplayMode.Picker,
+          selectableDates = selectableDates(minDateMillis, maxDateMillis, years),
+        )
+      }
+    } else {
+      null
     }
 
-    // Build selectable dates for min/max constraints
-    val selectableDates = remember(_minDateMillis.value, _maxDateMillis.value) {
-      object : SelectableDates {
-        override fun isSelectableDate(utcTimeMillis: Long): Boolean {
-          val min = _minDateMillis.value
-          val max = _maxDateMillis.value
-          return (min == null || utcTimeMillis >= min) &&
-            (max == null || utcTimeMillis <= max)
+    // Report selections made in the dialog (skipping the initial value)
+    LaunchedEffect(state) {
+      if (state == null) return@LaunchedEffect
+      snapshotFlow { state.selectedDateMillis }
+        .drop(1)
+        .collect { millis ->
+          if (millis != null) {
+            emitEvent(EventNames.DATE_CHANGE) { putDouble("selectedDateMillis", millis.toDouble()) }
+          }
         }
-
-        override fun isSelectableYear(year: Int): Boolean {
-          return year in yearRange
-        }
-      }
     }
 
-    // Determine initial display mode
-    val initialDisplayMode = remember(_initialDisplayMode.value) {
-      when (_initialDisplayMode.value) {
-        "input" -> DisplayMode.Input
-        else -> DisplayMode.Picker
-      }
-    }
-
-    // Create DatePicker state
-    val datePickerState = rememberDatePickerState(
-      initialSelectedDateMillis = _selectedDateMillis.value,
-      initialDisplayedMonthMillis = _initialDisplayedMonthMillis.value ?: _selectedDateMillis.value,
-      yearRange = yearRange,
-      initialDisplayMode = initialDisplayMode,
-      selectableDates = selectableDates
-    )
-
-    // Sync props to picker state when props change from JS
-    LaunchedEffect(_selectedDateMillis.value) {
-      val propValue = _selectedDateMillis.value
-      if (propValue != datePickerState.selectedDateMillis) {
-        datePickerState.selectedDateMillis = propValue
-      }
-    }
-
-    // Track selection changes and dispatch to JS
-    var isFirstComposition by remember { mutableStateOf(true) }
-    LaunchedEffect(datePickerState.selectedDateMillis) {
-      if (isFirstComposition) {
-        isFirstComposition = false
-        return@LaunchedEffect
-      }
-      datePickerState.selectedDateMillis?.let { millis ->
-        dispatchEvent(DateChangeEvent(getSurfaceId(), id, millis))
-      }
-    }
-
-    // Interaction source to detect clicks on the read-only text field
-    val interactionSource = remember { MutableInteractionSource() }
-
-    LaunchedEffect(interactionSource) {
-      interactionSource.interactions.collect { interaction ->
-        if (interaction is PressInteraction.Release && !disabled) {
-          _showDialog = true
-        }
-      }
-    }
-
-    // OutlinedTextField that shows selected date
-    // When dialog is open, show picker state; otherwise show prop value
-    OutlinedTextField(
-      modifier = Modifier.fillMaxWidth(),
-      value = formatDate(if (_showDialog) datePickerState.selectedDateMillis else _selectedDateMillis.value),
-      onValueChange = {},
-      readOnly = true,
-      singleLine = true,
+    // While the dialog is open, preview the in-progress selection
+    val shownMillis = if (state != null) state.selectedDateMillis else selectedDateMillis
+    PickerTextField(
+      value = DateTimeFormat.date(shownMillis),
+      label = label,
+      placeholder = placeholder,
       enabled = !disabled,
-      label = label?.let { { Text(it) } },
-      placeholder = placeholder?.let { { Text(it, maxLines = 1) } },
-      trailingIcon = {
-        Icon(Icons.Default.DateRange, contentDescription = "Select date")
-      },
-      interactionSource = interactionSource
+      trailingIcon = { Icon(Icons.Default.DateRange, contentDescription = "Select date") },
+      onPress = ::openDialog,
     )
 
-    // DatePickerDialog
-    if (_showDialog) {
+    if (state != null) {
       DatePickerDialog(
-        onDismissRequest = {
-          _showDialog = false
-          dispatchEvent(CancelEvent(getSurfaceId(), id))
-        },
+        onDismissRequest = ::cancelDialog,
         confirmButton = {
-          TextButton(
-            onClick = {
-              _showDialog = false
-              datePickerState.selectedDateMillis?.let { millis ->
-                dispatchEvent(ConfirmEvent(getSurfaceId(), id, millis))
+          ConfirmButton {
+            confirmDialog {
+              state.selectedDateMillis?.let { millis ->
+                emitEvent(EventNames.CONFIRM) { putDouble("selectedDateMillis", millis.toDouble()) }
               }
             }
-          ) {
-            Text(_confirmLabel.value ?: "OK")
           }
         },
-        dismissButton = {
-          TextButton(
-            onClick = {
-              _showDialog = false
-              dispatchEvent(CancelEvent(getSurfaceId(), id))
-            }
-          ) {
-            Text(_cancelLabel.value ?: "Cancel")
-          }
-        }
+        dismissButton = { DismissButton() },
       ) {
         DatePicker(
-          state = datePickerState,
+          state = state,
           showModeToggle = showModeToggle,
-          title = _titleText.value?.let { { Text(it) } }
+          title = dialogTitle(),
         )
       }
     }

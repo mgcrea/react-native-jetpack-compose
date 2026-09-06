@@ -19,7 +19,8 @@ import com.facebook.react.views.view.ReactViewGroup
 import com.google.android.material.bottomsheet.BottomSheetBehavior
 import com.google.android.material.bottomsheet.BottomSheetDialog
 import com.mgcrea.reactnative.jetpackcompose.core.DialogHostView
-import com.mgcrea.reactnative.jetpackcompose.events.DismissEvent
+import com.mgcrea.reactnative.jetpackcompose.core.emitEvent
+import com.mgcrea.reactnative.jetpackcompose.events.EventNames
 
 /**
  * Controller view that manages the bottom sheet content and implements RootView
@@ -31,21 +32,16 @@ import com.mgcrea.reactnative.jetpackcompose.events.DismissEvent
 @SuppressLint("ViewConstructor")
 private class ModalBottomSheetController(
   private val reactContext: ThemedReactContext,
-  private val onContentSizeChanged: (width: Int, height: Int) -> Unit
-) :
-  ReactViewGroup(reactContext),
-  RootView {
+  private val onContentSizeChanged: (width: Int, height: Int) -> Unit,
+) : ReactViewGroup(reactContext), RootView {
 
-  internal var eventDispatcher: EventDispatcher? = null
+  /** Forwarded from the host; without it no touch inside the sheet reaches JS. */
+  var eventDispatcher: EventDispatcher? = null
   private val jsTouchDispatcher = JSTouchDispatcher(this)
-  private var jsPointerDispatcher: JSPointerDispatcher? = null
+  private val jsPointerDispatcher = JSPointerDispatcher(this)
 
   private var lastWidth = 0
   private var lastHeight = 0
-
-  init {
-    jsPointerDispatcher = JSPointerDispatcher(this)
-  }
 
   override fun onSizeChanged(w: Int, h: Int, oldw: Int, oldh: Int) {
     super.onSizeChanged(w, h, oldw, oldh)
@@ -64,7 +60,7 @@ private class ModalBottomSheetController(
   override fun onInterceptTouchEvent(event: MotionEvent): Boolean {
     eventDispatcher?.let {
       jsTouchDispatcher.handleTouchEvent(event, it, reactContext)
-      jsPointerDispatcher?.handleMotionEvent(event, it, true)
+      jsPointerDispatcher.handleMotionEvent(event, it, true)
     }
     return super.onInterceptTouchEvent(event)
   }
@@ -72,7 +68,7 @@ private class ModalBottomSheetController(
   override fun onTouchEvent(event: MotionEvent): Boolean {
     eventDispatcher?.let {
       jsTouchDispatcher.handleTouchEvent(event, it, reactContext)
-      jsPointerDispatcher?.handleMotionEvent(event, it, false)
+      jsPointerDispatcher.handleMotionEvent(event, it, false)
     }
     super.onTouchEvent(event)
     return true
@@ -81,13 +77,13 @@ private class ModalBottomSheetController(
   override fun onChildStartedNativeGesture(childView: View?, ev: MotionEvent) {
     eventDispatcher?.let {
       jsTouchDispatcher.onChildStartedNativeGesture(ev, it)
-      jsPointerDispatcher?.onChildStartedNativeGesture(childView, ev, it)
+      jsPointerDispatcher.onChildStartedNativeGesture(childView, ev, it)
     }
   }
 
   override fun onChildEndedNativeGesture(childView: View, ev: MotionEvent) {
     eventDispatcher?.let { jsTouchDispatcher.onChildEndedNativeGesture(ev, it) }
-    jsPointerDispatcher?.onChildEndedNativeGesture()
+    jsPointerDispatcher.onChildEndedNativeGesture()
   }
 }
 
@@ -114,57 +110,72 @@ internal class ModalBottomSheetViewDialog(reactContext: ThemedReactContext) :
     onContentHeightChanged(height)
   }
   private var contentHeight = 0
-  private var showDragHandle = true
-  private var maxHeightRatio = 0.9
 
-  fun setShowDragHandle(value: Boolean) {
-    showDragHandle = value
+  var showDragHandle: Boolean = true
+    set(value) {
+      field = value
+      dragHandle.visibility = if (value) View.VISIBLE else View.GONE
+    }
+
+  var maxHeightRatio: Double = 0.9
+
+  // Built once; re-parented into each dialog window as needed
+  private val dragHandle: View by lazy { createDragHandle() }
+  private val container: LinearLayout by lazy {
+    LinearLayout(reactContext).apply {
+      orientation = LinearLayout.VERTICAL
+      layoutParams = FrameLayout.LayoutParams(
+        FrameLayout.LayoutParams.MATCH_PARENT,
+        FrameLayout.LayoutParams.WRAP_CONTENT,
+      )
+      addView(dragHandle)
+      addView(
+        controller,
+        LinearLayout.LayoutParams(
+          LinearLayout.LayoutParams.MATCH_PARENT,
+          LinearLayout.LayoutParams.WRAP_CONTENT,
+        ).apply { weight = 1f },
+      )
+    }
   }
 
-  fun setMaxHeightRatio(value: Double) {
-    maxHeightRatio = value
+  override fun onEventDispatcherChanged(dispatcher: EventDispatcher?) {
+    controller.eventDispatcher = dispatcher
   }
 
-  private fun dpToPx(dp: Float): Int {
-    return TypedValue.applyDimension(
-      TypedValue.COMPLEX_UNIT_DIP,
-      dp,
-      reactContext.resources.displayMetrics
-    ).toInt()
-  }
+  private fun dpToPx(dp: Float): Int =
+    TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, dp, reactContext.resources.displayMetrics).toInt()
 
   private fun createDragHandle(): View {
     val handleWidth = dpToPx(32f)
     val handleHeight = dpToPx(4f)
     val verticalPadding = dpToPx(12f)
 
-    // Create the drag handle shape
     val handleDrawable = GradientDrawable().apply {
       shape = GradientDrawable.RECTANGLE
       cornerRadius = handleHeight / 2f
       setColor(0x66808080) // Semi-transparent gray
     }
 
-    // Create the handle view
-    val handleView = View(reactContext).apply {
+    return View(reactContext).apply {
       layoutParams = LinearLayout.LayoutParams(handleWidth, handleHeight).apply {
         gravity = Gravity.CENTER_HORIZONTAL
         topMargin = verticalPadding
         bottomMargin = verticalPadding
       }
       background = handleDrawable
+      visibility = if (showDragHandle) View.VISIBLE else View.GONE
     }
-
-    return handleView
   }
+
+  private fun maxSheetHeightPx(): Int =
+    (reactContext.resources.displayMetrics.heightPixels * maxHeightRatio).toInt()
 
   private fun onContentHeightChanged(height: Int) {
     contentHeight = height
     // Update peekHeight if dialog is showing
-    (dialog as? BottomSheetDialog)?.behavior?.let { behavior ->
-      if (height > 0) {
-        behavior.peekHeight = height
-      }
+    if (height > 0) {
+      (dialog as? BottomSheetDialog)?.behavior?.peekHeight = height.coerceAtMost(maxSheetHeightPx())
     }
   }
 
@@ -175,9 +186,12 @@ internal class ModalBottomSheetViewDialog(reactContext: ThemedReactContext) :
       setOnDismissListener {
         if (isVisible) {
           markDismissed()
-          dispatchEvent(DismissEvent(getSurfaceId(), id))
+          emitEvent(EventNames.DISMISS)
         }
       }
+      // A previous dialog window may still own the container
+      (container.parent as? ViewGroup)?.removeView(container)
+      setContentView(container)
       behavior.apply {
         isFitToContents = true
         skipCollapsed = true
@@ -186,46 +200,13 @@ internal class ModalBottomSheetViewDialog(reactContext: ThemedReactContext) :
   }
 
   override fun onDialogShow() {
-    (dialog as? BottomSheetDialog)?.apply {
-      // Calculate max height
-      val displayMetrics = reactContext.resources.displayMetrics
-      val maxHeight = (displayMetrics.heightPixels * maxHeightRatio).toInt()
-
-      // Create container with drag handle and content
-      val container = LinearLayout(reactContext).apply {
-        orientation = LinearLayout.VERTICAL
-        layoutParams = FrameLayout.LayoutParams(
-          FrameLayout.LayoutParams.MATCH_PARENT,
-          FrameLayout.LayoutParams.WRAP_CONTENT
-        ).apply {
-          this.height = maxHeight.coerceAtMost(FrameLayout.LayoutParams.WRAP_CONTENT)
-        }
+    val maxHeight = maxSheetHeightPx()
+    (dialog as? BottomSheetDialog)?.behavior?.apply {
+      if (contentHeight > 0) {
+        peekHeight = contentHeight.coerceAtMost(maxHeight)
       }
-
-      // Add drag handle if enabled
-      if (showDragHandle) {
-        container.addView(createDragHandle())
-      }
-
-      // Add controller (content)
-      (controller.parent as? ViewGroup)?.removeView(controller)
-      container.addView(controller, LinearLayout.LayoutParams(
-        LinearLayout.LayoutParams.MATCH_PARENT,
-        LinearLayout.LayoutParams.WRAP_CONTENT
-      ).apply {
-        weight = 1f
-      })
-
-      setContentView(container)
-
-      // Limit the bottom sheet max height
-      behavior.apply {
-        if (contentHeight > 0) {
-          peekHeight = contentHeight.coerceAtMost(maxHeight)
-        }
-        this.maxHeight = maxHeight
-        state = BottomSheetBehavior.STATE_EXPANDED
-      }
+      this.maxHeight = maxHeight
+      state = BottomSheetBehavior.STATE_EXPANDED
     }
   }
 
@@ -252,5 +233,5 @@ internal class ModalBottomSheetViewDialog(reactContext: ThemedReactContext) :
 
   override fun getChildCount(): Int = controller.childCount
 
-  override fun getChildAt(index: Int): View = controller.getChildAt(index)
+  override fun getChildAt(index: Int): View? = controller.getChildAt(index)
 }

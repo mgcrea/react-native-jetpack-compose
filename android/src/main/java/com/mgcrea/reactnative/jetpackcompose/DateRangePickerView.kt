@@ -1,285 +1,123 @@
 package com.mgcrea.reactnative.jetpackcompose
 
-import androidx.compose.foundation.interaction.MutableInteractionSource
-import androidx.compose.foundation.interaction.PressInteraction
-import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.DateRange
 import androidx.compose.material3.DatePickerDialog
 import androidx.compose.material3.DateRangePicker
+import androidx.compose.material3.DateRangePickerState
 import androidx.compose.material3.DisplayMode
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
-import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.SelectableDates
-import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
-import androidx.compose.material3.rememberDateRangePickerState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Modifier
+import com.facebook.react.bridge.WritableMap
 import com.facebook.react.uimanager.ThemedReactContext
-import com.mgcrea.reactnative.jetpackcompose.core.InlineComposeView
-import com.mgcrea.reactnative.jetpackcompose.events.CancelEvent
-import com.mgcrea.reactnative.jetpackcompose.events.DateRangeChangeEvent
-import com.mgcrea.reactnative.jetpackcompose.events.RangeConfirmEvent
-import java.text.SimpleDateFormat
-import java.util.Date
+import com.mgcrea.reactnative.jetpackcompose.core.DateTimeFormat
+import com.mgcrea.reactnative.jetpackcompose.core.DialogPickerView
+import com.mgcrea.reactnative.jetpackcompose.core.emitEvent
+import com.mgcrea.reactnative.jetpackcompose.events.EventNames
+import com.mgcrea.reactnative.jetpackcompose.ui.DEFAULT_YEAR_RANGE
+import com.mgcrea.reactnative.jetpackcompose.ui.PickerTextField
+import com.mgcrea.reactnative.jetpackcompose.ui.selectableDates
 import java.util.Locale
+import kotlinx.coroutines.flow.drop
 
+/**
+ * Read-only field that opens a Material3 [DateRangePicker] in a [DatePickerDialog].
+ */
 @OptIn(ExperimentalMaterial3Api::class)
-internal class DateRangePickerView(reactContext: ThemedReactContext) :
-  InlineComposeView(reactContext, TAG) {
+internal class DateRangePickerView(reactContext: ThemedReactContext) : DialogPickerView(reactContext) {
 
-  companion object {
-    private const val TAG = "DateRangePickerView"
-  }
-
-  // State backing for Compose
-  private val _startDateMillis = mutableStateOf<Long?>(null)
-  private val _endDateMillis = mutableStateOf<Long?>(null)
-  private val _initialDisplayedMonthMillis = mutableStateOf<Long?>(null)
-  private val _minDateMillis = mutableStateOf<Long?>(null)
-  private val _maxDateMillis = mutableStateOf<Long?>(null)
-  private val _yearRangeStart = mutableStateOf<Int?>(null)
-  private val _yearRangeEnd = mutableStateOf<Int?>(null)
-  private val _initialDisplayMode = mutableStateOf("picker")
-  private val _showModeToggle = mutableStateOf(true)
-  private val _confirmLabel = mutableStateOf<String?>(null)
-  private val _cancelLabel = mutableStateOf<String?>(null)
-  private val _titleText = mutableStateOf<String?>(null)
-
-  // New state for OutlinedTextField
-  private val _label = mutableStateOf<String?>(null)
-  private val _placeholder = mutableStateOf<String?>(null)
-  private val _disabled = mutableStateOf(false)
-  private var _showDialog by mutableStateOf(false)
-
-  // Date formatting
-  private val dateFormat = SimpleDateFormat.getDateInstance(SimpleDateFormat.MEDIUM, Locale.getDefault())
-
-  private fun formatDateRange(startMillis: Long?, endMillis: Long?): String {
-    val startStr = startMillis?.let { dateFormat.format(Date(it)) }
-    val endStr = endMillis?.let { dateFormat.format(Date(it)) }
-    return when {
-      startStr != null && endStr != null -> "$startStr - $endStr"
-      startStr != null -> startStr
-      else -> ""
-    }
-  }
-
-  // Property setters called by ViewManager
-  fun setStartDateMillis(value: Double?) {
-    _startDateMillis.value = value?.toLong()
-  }
-
-  fun setEndDateMillis(value: Double?) {
-    _endDateMillis.value = value?.toLong()
-  }
-
-  fun setInitialDisplayedMonthMillis(value: Double?) {
-    _initialDisplayedMonthMillis.value = value?.toLong()
-  }
-
-  fun setMinDateMillis(value: Double?) {
-    _minDateMillis.value = value?.toLong()
-  }
-
-  fun setMaxDateMillis(value: Double?) {
-    _maxDateMillis.value = value?.toLong()
-  }
-
-  fun setYearRangeStart(value: Double?) {
-    _yearRangeStart.value = value?.toInt()
-  }
-
-  fun setYearRangeEnd(value: Double?) {
-    _yearRangeEnd.value = value?.toInt()
-  }
-
-  fun setInitialDisplayMode(value: String?) {
-    _initialDisplayMode.value = value ?: "picker"
-  }
-
-  fun setShowModeToggle(value: Boolean) {
-    _showModeToggle.value = value
-  }
-
-  fun setConfirmLabel(value: String?) {
-    _confirmLabel.value = value
-  }
-
-  fun setCancelLabel(value: String?) {
-    _cancelLabel.value = value
-  }
-
-  fun setTitleText(value: String?) {
-    _titleText.value = value
-  }
-
-  fun setLabel(value: String?) {
-    _label.value = value
-  }
-
-  fun setPlaceholder(value: String?) {
-    _placeholder.value = value
-  }
-
-  fun setDisabled(value: Boolean) {
-    _disabled.value = value
-  }
+  var startDateMillis: Long? by mutableStateOf(null)
+  var endDateMillis: Long? by mutableStateOf(null)
+  var initialDisplayedMonthMillis: Long? by mutableStateOf(null)
+  var minDateMillis: Long? by mutableStateOf(null)
+  var maxDateMillis: Long? by mutableStateOf(null)
+  var yearRangeStart: Int? by mutableStateOf(null)
+  var yearRangeEnd: Int? by mutableStateOf(null)
 
   @Composable
   override fun ComposeContent() {
-    val disabled = _disabled.value
-    val label = _label.value
-    val placeholder = _placeholder.value
-    val showModeToggle = _showModeToggle.value
-
-    // Build year range
-    val yearRange = remember(_yearRangeStart.value, _yearRangeEnd.value) {
-      val start = _yearRangeStart.value ?: 1900
-      val end = _yearRangeEnd.value ?: 2100
-      start..end
+    // Picker state lives only while the dialog is open, so it always starts from current props
+    val state = if (showDialog) {
+      remember {
+        val years = (yearRangeStart ?: DEFAULT_YEAR_RANGE.first)..(yearRangeEnd ?: DEFAULT_YEAR_RANGE.last)
+        DateRangePickerState(
+          locale = Locale.getDefault(),
+          initialSelectedStartDateMillis = startDateMillis,
+          initialSelectedEndDateMillis = endDateMillis,
+          initialDisplayedMonthMillis = initialDisplayedMonthMillis ?: startDateMillis,
+          yearRange = years,
+          initialDisplayMode = if (startsInInputMode) DisplayMode.Input else DisplayMode.Picker,
+          selectableDates = selectableDates(minDateMillis, maxDateMillis, years),
+        )
+      }
+    } else {
+      null
     }
 
-    // Build selectable dates for min/max constraints
-    val selectableDates = remember(_minDateMillis.value, _maxDateMillis.value) {
-      object : SelectableDates {
-        override fun isSelectableDate(utcTimeMillis: Long): Boolean {
-          val min = _minDateMillis.value
-          val max = _maxDateMillis.value
-          return (min == null || utcTimeMillis >= min) &&
-            (max == null || utcTimeMillis <= max)
+    // Report selections made in the dialog (skipping the initial value)
+    LaunchedEffect(state) {
+      if (state == null) return@LaunchedEffect
+      snapshotFlow { state.selectedStartDateMillis to state.selectedEndDateMillis }
+        .drop(1)
+        .collect { (start, end) ->
+          emitEvent(EventNames.DATE_CHANGE) {
+            putDoubleOrNull("startDateMillis", start)
+            putDoubleOrNull("endDateMillis", end)
+          }
         }
-
-        override fun isSelectableYear(year: Int): Boolean {
-          return year in yearRange
-        }
-      }
     }
 
-    // Determine initial display mode
-    val initialDisplayMode = remember(_initialDisplayMode.value) {
-      when (_initialDisplayMode.value) {
-        "input" -> DisplayMode.Input
-        else -> DisplayMode.Picker
-      }
-    }
-
-    // Create DateRangePicker state
-    val dateRangePickerState = rememberDateRangePickerState(
-      initialSelectedStartDateMillis = _startDateMillis.value,
-      initialSelectedEndDateMillis = _endDateMillis.value,
-      initialDisplayedMonthMillis = _initialDisplayedMonthMillis.value ?: _startDateMillis.value,
-      yearRange = yearRange,
-      initialDisplayMode = initialDisplayMode,
-      selectableDates = selectableDates
-    )
-
-    // Sync props to picker state when props change from JS
-    LaunchedEffect(_startDateMillis.value, _endDateMillis.value) {
-      val startProp = _startDateMillis.value
-      val endProp = _endDateMillis.value
-      if (startProp != dateRangePickerState.selectedStartDateMillis ||
-          endProp != dateRangePickerState.selectedEndDateMillis) {
-        dateRangePickerState.setSelection(startProp, endProp)
-      }
-    }
-
-    // Track selection changes and dispatch to JS (skip first composition)
-    var isFirstComposition by remember { mutableStateOf(true) }
-    LaunchedEffect(
-      dateRangePickerState.selectedStartDateMillis,
-      dateRangePickerState.selectedEndDateMillis
-    ) {
-      if (isFirstComposition) {
-        isFirstComposition = false
-        return@LaunchedEffect
-      }
-      dispatchEvent(DateRangeChangeEvent(
-        getSurfaceId(),
-        id,
-        dateRangePickerState.selectedStartDateMillis,
-        dateRangePickerState.selectedEndDateMillis
-      ))
-    }
-
-    // Interaction source to detect clicks on the read-only text field
-    val interactionSource = remember { MutableInteractionSource() }
-
-    LaunchedEffect(interactionSource) {
-      interactionSource.interactions.collect { interaction ->
-        if (interaction is PressInteraction.Release && !disabled) {
-          _showDialog = true
-        }
-      }
-    }
-
-    // OutlinedTextField that shows selected date range
-    // When dialog is open, show picker state; otherwise show prop value
-    OutlinedTextField(
-      modifier = Modifier.fillMaxWidth(),
-      value = formatDateRange(
-        if (_showDialog) dateRangePickerState.selectedStartDateMillis else _startDateMillis.value,
-        if (_showDialog) dateRangePickerState.selectedEndDateMillis else _endDateMillis.value
-      ),
-      onValueChange = {},
-      readOnly = true,
-      singleLine = true,
+    // While the dialog is open, preview the in-progress selection
+    val shownStart = if (state != null) state.selectedStartDateMillis else startDateMillis
+    val shownEnd = if (state != null) state.selectedEndDateMillis else endDateMillis
+    PickerTextField(
+      value = DateTimeFormat.dateRange(shownStart, shownEnd),
+      label = label,
+      placeholder = placeholder,
       enabled = !disabled,
-      label = label?.let { { Text(it) } },
-      placeholder = placeholder?.let { { Text(it, maxLines = 1) } },
-      trailingIcon = {
-        Icon(Icons.Default.DateRange, contentDescription = "Select date range")
-      },
-      interactionSource = interactionSource
+      trailingIcon = { Icon(Icons.Default.DateRange, contentDescription = "Select date range") },
+      onPress = ::openDialog,
     )
 
-    // DatePickerDialog with DateRangePicker
-    if (_showDialog) {
+    if (state != null) {
       DatePickerDialog(
-        onDismissRequest = {
-          _showDialog = false
-          dispatchEvent(CancelEvent(getSurfaceId(), id))
-        },
+        onDismissRequest = ::cancelDialog,
         confirmButton = {
-          TextButton(
-            onClick = {
-              _showDialog = false
-              val startMillis = dateRangePickerState.selectedStartDateMillis
-              val endMillis = dateRangePickerState.selectedEndDateMillis
+          ConfirmButton {
+            confirmDialog {
+              val start = state.selectedStartDateMillis
+              val end = state.selectedEndDateMillis
               // Only dispatch confirm event when both dates are selected
-              if (startMillis != null && endMillis != null) {
-                dispatchEvent(RangeConfirmEvent(getSurfaceId(), id, startMillis, endMillis))
+              if (start != null && end != null) {
+                emitEvent(EventNames.CONFIRM) {
+                  putDouble("startDateMillis", start.toDouble())
+                  putDouble("endDateMillis", end.toDouble())
+                }
               }
             }
-          ) {
-            Text(_confirmLabel.value ?: "OK")
           }
         },
-        dismissButton = {
-          TextButton(
-            onClick = {
-              _showDialog = false
-              dispatchEvent(CancelEvent(getSurfaceId(), id))
-            }
-          ) {
-            Text(_cancelLabel.value ?: "Cancel")
-          }
-        }
+        dismissButton = { DismissButton() },
       ) {
         DateRangePicker(
-          state = dateRangePickerState,
+          state = state,
           showModeToggle = showModeToggle,
-          title = _titleText.value?.let { { Text(it) } },
-          modifier = Modifier.weight(1f)
+          title = dialogTitle(),
+          modifier = Modifier.weight(1f),
         )
       }
     }
+  }
+
+  private fun WritableMap.putDoubleOrNull(key: String, value: Long?) {
+    if (value != null) putDouble(key, value.toDouble()) else putNull(key)
   }
 }

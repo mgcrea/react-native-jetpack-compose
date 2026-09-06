@@ -1,248 +1,88 @@
 package com.mgcrea.reactnative.jetpackcompose
 
-import androidx.compose.foundation.interaction.MutableInteractionSource
-import androidx.compose.foundation.interaction.PressInteraction
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.DateRange
-import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
-import androidx.compose.material3.TimeInput
-import androidx.compose.material3.TimePicker
-import androidx.compose.material3.rememberTimePickerState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
-import androidx.compose.ui.Modifier
-import androidx.compose.ui.unit.dp
 import com.facebook.react.uimanager.ThemedReactContext
-import com.mgcrea.reactnative.jetpackcompose.core.InlineComposeView
-import com.mgcrea.reactnative.jetpackcompose.events.CancelEvent
-import com.mgcrea.reactnative.jetpackcompose.events.TimeChangeEvent
-import com.mgcrea.reactnative.jetpackcompose.events.TimeConfirmEvent
-import java.text.SimpleDateFormat
-import java.util.Calendar
-import java.util.Locale
+import com.mgcrea.reactnative.jetpackcompose.core.DateTimeFormat
+import com.mgcrea.reactnative.jetpackcompose.core.DialogPickerView
+import com.mgcrea.reactnative.jetpackcompose.core.emitEvent
+import com.mgcrea.reactnative.jetpackcompose.events.EventNames
+import com.mgcrea.reactnative.jetpackcompose.ui.PickerTextField
+import com.mgcrea.reactnative.jetpackcompose.ui.TimePickerContent
+import com.mgcrea.reactnative.jetpackcompose.ui.minutesFromMidnight
+import com.mgcrea.reactnative.jetpackcompose.ui.rememberSystem24Hour
+import com.mgcrea.reactnative.jetpackcompose.ui.timePickerState
+import kotlinx.coroutines.flow.drop
 
+/**
+ * Read-only field that opens a Material3 time picker in an [AlertDialog].
+ */
 @OptIn(ExperimentalMaterial3Api::class)
-internal class TimePickerView(reactContext: ThemedReactContext) :
-  InlineComposeView(reactContext, TAG) {
+internal class TimePickerView(reactContext: ThemedReactContext) : DialogPickerView(reactContext) {
 
-  companion object {
-    private const val TAG = "TimePickerView"
-  }
-
-  // State backing for Compose
-  private val _selectedTimeMinutes = mutableStateOf<Int?>(null)
-  private val _is24Hour = mutableStateOf<Boolean?>(null)
-  private val _initialDisplayMode = mutableStateOf("picker")
-  private val _showModeToggle = mutableStateOf(true)
-  private val _confirmLabel = mutableStateOf<String?>(null)
-  private val _cancelLabel = mutableStateOf<String?>(null)
-  private val _titleText = mutableStateOf<String?>(null)
-
-  // State for OutlinedTextField
-  private val _label = mutableStateOf<String?>(null)
-  private val _placeholder = mutableStateOf<String?>(null)
-  private val _disabled = mutableStateOf(false)
-  private var _showDialog by mutableStateOf(false)
-
-  // Property setters called by ViewManager
-  fun setSelectedTimeMinutes(value: Int?) {
-    _selectedTimeMinutes.value = value
-  }
-
-  fun setIs24Hour(value: Boolean?) {
-    _is24Hour.value = value
-  }
-
-  fun setInitialDisplayMode(value: String?) {
-    _initialDisplayMode.value = value ?: "picker"
-  }
-
-  fun setShowModeToggle(value: Boolean) {
-    _showModeToggle.value = value
-  }
-
-  fun setConfirmLabel(value: String?) {
-    _confirmLabel.value = value
-  }
-
-  fun setCancelLabel(value: String?) {
-    _cancelLabel.value = value
-  }
-
-  fun setTitleText(value: String?) {
-    _titleText.value = value
-  }
-
-  fun setLabel(value: String?) {
-    _label.value = value
-  }
-
-  fun setPlaceholder(value: String?) {
-    _placeholder.value = value
-  }
-
-  fun setDisabled(value: Boolean) {
-    _disabled.value = value
-  }
-
-  private fun formatTime(minutes: Int?, is24Hour: Boolean): String {
-    if (minutes == null) return ""
-    val hours = minutes / 60
-    val mins = minutes % 60
-    val calendar = Calendar.getInstance().apply {
-      set(Calendar.HOUR_OF_DAY, hours)
-      set(Calendar.MINUTE, mins)
-    }
-    val pattern = if (is24Hour) "HH:mm" else "h:mm a"
-    val format = SimpleDateFormat(pattern, Locale.getDefault())
-    return format.format(calendar.time)
-  }
-
-  private fun is24HourFormat(): Boolean {
-    return _is24Hour.value ?: android.text.format.DateFormat.is24HourFormat(context)
-  }
+  var selectedTimeMinutes: Int? by mutableStateOf(null)
+  var is24Hour: Boolean? by mutableStateOf(null)
 
   @Composable
   override fun ComposeContent() {
-    val disabled = _disabled.value
-    val label = _label.value
-    val placeholder = _placeholder.value
-    val showModeToggle = _showModeToggle.value
-    val is24Hour = is24HourFormat()
+    val use24Hour = is24Hour ?: rememberSystem24Hour()
 
-    // Get initial hour and minute from selected time
-    val initialHour = _selectedTimeMinutes.value?.let { it / 60 } ?: 0
-    val initialMinute = _selectedTimeMinutes.value?.let { it % 60 } ?: 0
+    // Picker state lives only while the dialog is open, so it always starts from current props
+    val state = if (showDialog) remember { timePickerState(selectedTimeMinutes, use24Hour) } else null
 
-    // Create TimePicker state
-    val timePickerState = rememberTimePickerState(
-      initialHour = initialHour,
-      initialMinute = initialMinute,
-      is24Hour = is24Hour
-    )
-
-    // Mode toggle state: true = dial (TimePicker), false = input (TimeInput)
-    var showDial by remember { mutableStateOf(_initialDisplayMode.value == "picker") }
-
-    // Sync props to picker state when props change from JS
-    LaunchedEffect(_selectedTimeMinutes.value) {
-      val propMinutes = _selectedTimeMinutes.value
-      val stateMinutes = timePickerState.hour * 60 + timePickerState.minute
-      if (propMinutes != null && propMinutes != stateMinutes) {
-        // Note: TimePickerState doesn't have direct setters, so we need to handle this differently
-        // The state will be correct on dialog open since we pass initialHour/initialMinute
-      }
+    // Report selections made in the dialog (skipping the initial value)
+    LaunchedEffect(state) {
+      if (state == null) return@LaunchedEffect
+      snapshotFlow { state.minutesFromMidnight }
+        .drop(1)
+        .collect { minutes -> emitEvent(EventNames.TIME_CHANGE) { putInt("selectedTimeMinutes", minutes) } }
     }
 
-    // Interaction source to detect clicks on the read-only text field
-    val interactionSource = remember { MutableInteractionSource() }
-
-    LaunchedEffect(interactionSource) {
-      interactionSource.interactions.collect { interaction ->
-        if (interaction is PressInteraction.Release && !disabled) {
-          _showDialog = true
-        }
-      }
-    }
-
-    // OutlinedTextField that shows selected time
-    OutlinedTextField(
-      modifier = Modifier.fillMaxWidth(),
-      value = formatTime(_selectedTimeMinutes.value, is24Hour),
-      onValueChange = {},
-      readOnly = true,
-      singleLine = true,
+    PickerTextField(
+      value = DateTimeFormat.time(selectedTimeMinutes, use24Hour),
+      label = label,
+      placeholder = placeholder,
       enabled = !disabled,
-      label = label?.let { { Text(it) } },
-      placeholder = placeholder?.let { { Text(it, maxLines = 1) } },
-      trailingIcon = {
-        Icon(Icons.Default.DateRange, contentDescription = "Select time")
-      },
-      interactionSource = interactionSource
+      trailingIcon = { Icon(Icons.Default.DateRange, contentDescription = "Select time") },
+      onPress = ::openDialog,
     )
 
-    // TimePickerDialog
-    if (_showDialog) {
+    if (state != null) {
+      var showDial by remember { mutableStateOf(!startsInInputMode) }
       AlertDialog(
-        onDismissRequest = {
-          _showDialog = false
-          dispatchEvent(CancelEvent(getSurfaceId(), id))
-        },
+        onDismissRequest = ::cancelDialog,
         confirmButton = {
-          TextButton(
-            onClick = {
-              _showDialog = false
-              val minutes = timePickerState.hour * 60 + timePickerState.minute
-              dispatchEvent(TimeConfirmEvent(getSurfaceId(), id, minutes))
+          ConfirmButton {
+            confirmDialog {
+              emitEvent(EventNames.CONFIRM) { putInt("selectedTimeMinutes", state.minutesFromMidnight) }
             }
-          ) {
-            Text(_confirmLabel.value ?: "OK")
           }
         },
-        dismissButton = {
-          TextButton(
-            onClick = {
-              _showDialog = false
-              dispatchEvent(CancelEvent(getSurfaceId(), id))
-            }
-          ) {
-            Text(_cancelLabel.value ?: "Cancel")
-          }
-        },
-        title = _titleText.value?.let { { Text(it) } },
+        dismissButton = { DismissButton() },
+        title = dialogTitle(),
         text = {
-          Column(
-            horizontalAlignment = Alignment.CenterHorizontally
-          ) {
-            // Mode toggle row
-            if (showModeToggle) {
-              Row(
-                modifier = Modifier
-                  .fillMaxWidth()
-                  .padding(bottom = 16.dp),
-                horizontalArrangement = Arrangement.End
-              ) {
-                IconButton(onClick = { showDial = !showDial }) {
-                  Icon(
-                    imageVector = if (showDial) Icons.Default.Edit else Icons.Default.DateRange,
-                    contentDescription = if (showDial) "Switch to keyboard input" else "Switch to dial"
-                  )
-                }
-              }
-            }
-
-            // Time picker content
-            if (showDial) {
-              TimePicker(state = timePickerState)
-            } else {
-              TimeInput(state = timePickerState)
-            }
+          Column(horizontalAlignment = Alignment.CenterHorizontally) {
+            TimePickerContent(
+              state = state,
+              showDial = showDial,
+              showModeToggle = showModeToggle,
+              onToggleMode = { showDial = !showDial },
+            )
           }
-        }
+        },
       )
-
-      // Track selection changes and dispatch to JS
-      LaunchedEffect(timePickerState.hour, timePickerState.minute) {
-        val minutes = timePickerState.hour * 60 + timePickerState.minute
-        dispatchEvent(TimeChangeEvent(getSurfaceId(), id, minutes))
-      }
     }
   }
 }

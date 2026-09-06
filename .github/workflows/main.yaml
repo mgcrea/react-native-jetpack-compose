@@ -44,9 +44,20 @@ jobs:
       - name: Verify tarball 📦
         run: |
           set -euo pipefail
-          npm pack --dry-run 2>&1 | tee pack.log
-          grep -q "android/generated/java" pack.log || { echo "::error::android/generated missing from tarball"; exit 1; }
-          if grep -q "\.test\." pack.log; then echo "::error::test files leaked into tarball"; exit 1; fi
+          npm pack --dry-run --json --ignore-scripts > pack.json
+          node -e "
+            const files = JSON.parse(require('fs').readFileSync('pack.json', 'utf8'))[0].files.map((f) => f.path);
+            if (!files.some((f) => f.startsWith('android/generated/java'))) {
+              console.error('::error::android/generated missing from tarball');
+              process.exit(1);
+            }
+            const tests = files.filter((f) => f.includes('.test.'));
+            if (tests.length) {
+              console.error('::error::test files leaked into tarball: ' + tests.join(', '));
+              process.exit(1);
+            }
+            console.log(\`tarball ok: \${files.length} files\`);
+          "
 
   android:
     name: Android compile

@@ -1,38 +1,17 @@
-import React, { FunctionComponent, useCallback, useMemo } from "react";
-import { StyleSheet, type NativeSyntheticEvent, type StyleProp, type ViewStyle } from "react-native";
+import type { FunctionComponent } from "react";
+import type { StyleProp, ViewStyle } from "react-native";
 
+import { useNativeEvent, useVoidEvent } from "../hooks/useNativeEvent";
+import type { DateInput, DateRange, YearRange } from "../types";
+import { fromEpochMillis, toEpochMillis } from "../utils/date";
+import { fieldStyles, useFieldStyle } from "../utils/style";
 import DateRangePickerNativeComponent, {
   type NativeDateRangePickerProps,
-  type RangeCancelEvent,
   type RangeConfirmEvent,
   type RangeDateChangeEvent,
 } from "./DateRangePickerNativeComponent";
 
-/**
- * Converts a Date, number (epoch millis), or ISO string to epoch milliseconds.
- */
-function toEpochMillis(date: Date | number | string | undefined | null): number | undefined {
-  if (date == null) return undefined;
-  if (typeof date === "number") return date;
-  if (typeof date === "string") return new Date(date).getTime();
-  return date.getTime();
-}
-
-/**
- * Year range configuration.
- */
-export type YearRange = {
-  start: number;
-  end: number;
-};
-
-/**
- * Represents a date range with start and end dates.
- */
-export type DateRange = {
-  startDate: Date | null;
-  endDate: Date | null;
-};
+export type { DateRange, YearRange } from "../types";
 
 /**
  * Props for the DateRangePicker component.
@@ -54,11 +33,11 @@ export type DateRangePickerProps = Omit<
   /** The selected date range value. */
   value?: DateRange | null;
   /** The initially displayed month. Accepts Date, epoch milliseconds, or ISO string. */
-  initialDisplayedMonth?: Date | number | string;
+  initialDisplayedMonth?: DateInput;
   /** Minimum selectable date. Accepts Date, epoch milliseconds, or ISO string. */
-  minDate?: Date | number | string;
+  minDate?: DateInput;
   /** Maximum selectable date. Accepts Date, epoch milliseconds, or ISO string. */
-  maxDate?: Date | number | string;
+  maxDate?: DateInput;
   /** Year range for the year selector. */
   yearRange?: YearRange;
   /** Initial display mode: 'picker' (calendar) or 'input' (text field). */
@@ -85,6 +64,13 @@ export type DateRangePickerProps = Omit<
   onChange?: (range: DateRange) => void;
   /** Custom styles applied to the container. */
   style?: StyleProp<ViewStyle>;
+};
+
+const toDateRange = (event: RangeConfirmEvent | RangeDateChangeEvent): DateRange => {
+  return {
+    startDate: fromEpochMillis(event.startDateMillis),
+    endDate: fromEpochMillis(event.endDateMillis),
+  };
 };
 
 /**
@@ -127,53 +113,18 @@ export const DateRangePicker: FunctionComponent<DateRangePickerProps> = ({
   style,
   ...props
 }) => {
-  // Convert dates to epoch milliseconds
-  const startDateMillis = useMemo(() => toEpochMillis(value?.startDate), [value?.startDate]);
-  const endDateMillis = useMemo(() => toEpochMillis(value?.endDate), [value?.endDate]);
-  const initialDisplayedMonthMillis = useMemo(
-    () => toEpochMillis(initialDisplayedMonth),
-    [initialDisplayedMonth],
-  );
-  const minDateMillis = useMemo(() => toEpochMillis(minDate), [minDate]);
-  const maxDateMillis = useMemo(() => toEpochMillis(maxDate), [maxDate]);
-
-  const handleConfirm = useCallback(
-    (event: NativeSyntheticEvent<RangeConfirmEvent>) => {
-      const { startDateMillis: start, endDateMillis: end } = event.nativeEvent;
-      onConfirm?.({
-        startDate: start ? new Date(start) : null,
-        endDate: end ? new Date(end) : null,
-      });
-    },
-    [onConfirm],
-  );
-
-  const handleCancel = useCallback(
-    (_event: NativeSyntheticEvent<RangeCancelEvent>) => {
-      onCancel?.();
-    },
-    [onCancel],
-  );
-
-  const handleDateChange = useCallback(
-    (event: NativeSyntheticEvent<RangeDateChangeEvent>) => {
-      const { startDateMillis: start, endDateMillis: end } = event.nativeEvent;
-      onChange?.({
-        startDate: start ? new Date(start) : null,
-        endDate: end ? new Date(end) : null,
-      });
-    },
-    [onChange],
-  );
+  const handleConfirm = useNativeEvent(onConfirm, toDateRange);
+  const handleCancel = useVoidEvent(onCancel);
+  const handleDateChange = useNativeEvent(onChange, toDateRange);
 
   return (
     <DateRangePickerNativeComponent
       {...props}
-      startDateMillis={startDateMillis}
-      endDateMillis={endDateMillis}
-      initialDisplayedMonthMillis={initialDisplayedMonthMillis}
-      minDateMillis={minDateMillis}
-      maxDateMillis={maxDateMillis}
+      startDateMillis={toEpochMillis(value?.startDate)}
+      endDateMillis={toEpochMillis(value?.endDate)}
+      initialDisplayedMonthMillis={toEpochMillis(initialDisplayedMonth)}
+      minDateMillis={toEpochMillis(minDate)}
+      maxDateMillis={toEpochMillis(maxDate)}
       yearRangeStart={yearRange?.start}
       yearRangeEnd={yearRange?.end}
       initialDisplayMode={initialDisplayMode}
@@ -187,13 +138,7 @@ export const DateRangePicker: FunctionComponent<DateRangePickerProps> = ({
       onConfirm={handleConfirm}
       onCancel={handleCancel}
       onDateChange={handleDateChange}
-      style={[styles.base, style]}
+      style={useFieldStyle(fieldStyles.field, style)}
     />
   );
 };
-
-const styles = StyleSheet.create({
-  base: {
-    minHeight: 64,
-  },
-});

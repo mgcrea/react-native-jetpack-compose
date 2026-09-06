@@ -1,9 +1,10 @@
-import React, { useCallback, type FunctionComponent } from "react";
-import { StyleSheet, type NativeSyntheticEvent, type StyleProp, type ViewStyle } from "react-native";
+import type { FunctionComponent } from "react";
+import type { StyleProp, ViewStyle } from "react-native";
 
+import { useNativeEvent, useVoidEvent } from "../hooks/useNativeEvent";
+import { fieldStyles, useFieldStyle } from "../utils/style";
 import SheetPickerNativeComponent, {
   type NativeSheetPickerProps,
-  type SheetPickerDismissEvent,
   type SheetPickerSelectEvent,
 } from "./SheetPickerNativeComponent";
 
@@ -59,6 +60,8 @@ export type SheetPickerProps = Omit<
   style?: StyleProp<ViewStyle>;
 };
 
+const toValue = (event: SheetPickerSelectEvent) => event.value;
+
 /**
  * A searchable picker component with a text field that opens a modal bottom sheet.
  * Ideal for long lists like country or language selection.
@@ -100,19 +103,8 @@ export const SheetPicker: FunctionComponent<SheetPickerProps> = ({
   style,
   ...props
 }) => {
-  const handleSelect = useCallback(
-    (event: NativeSyntheticEvent<SheetPickerSelectEvent>) => {
-      onSelect?.(event.nativeEvent.value);
-    },
-    [onSelect],
-  );
-
-  const handleDismiss = useCallback(
-    (_event: NativeSyntheticEvent<SheetPickerDismissEvent>) => {
-      onDismiss?.();
-    },
-    [onDismiss],
-  );
+  const handleSelect = useNativeEvent(onSelect, toValue);
+  const handleDismiss = useVoidEvent(onDismiss);
 
   return (
     <SheetPickerNativeComponent
@@ -129,13 +121,7 @@ export const SheetPicker: FunctionComponent<SheetPickerProps> = ({
       disabled={disabled}
       onItemSelect={handleSelect}
       onDismiss={handleDismiss}
-      style={[styles.base, style]}
+      style={useFieldStyle(fieldStyles.field, style)}
     />
   );
 };
-
-const styles = StyleSheet.create({
-  base: {
-    minHeight: 64,
-  },
-});

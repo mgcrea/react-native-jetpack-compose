@@ -1,14 +1,11 @@
-/* eslint-disable @typescript-eslint/no-empty-object-type */
-/* eslint-disable @typescript-eslint/consistent-type-definitions */
-import { codegenNativeComponent, type HostComponent, type ViewProps } from "react-native";
-import type { DirectEventHandler, Double } from "react-native/Libraries/Types/CodegenTypes";
+import { codegenNativeComponent, type CodegenTypes, type HostComponent, type ViewProps } from "react-native";
 
 /**
  * Event payload for the onConfirm event.
  */
 export interface RangeConfirmEvent {
-  startDateMillis: Double;
-  endDateMillis: Double;
+  startDateMillis: CodegenTypes.Double;
+  endDateMillis: CodegenTypes.Double;
 }
 
 /**
@@ -20,8 +17,10 @@ export interface RangeCancelEvent {}
  * Event payload for the onDateChange event.
  */
 export interface RangeDateChangeEvent {
-  startDateMillis: Double;
-  endDateMillis: Double;
+  /** Null while the start date has not been picked yet. */
+  startDateMillis?: CodegenTypes.Double | null;
+  /** Null while the end date has not been picked yet. */
+  endDateMillis?: CodegenTypes.Double | null;
 }
 
 /**
@@ -30,20 +29,20 @@ export interface RangeDateChangeEvent {
  */
 export interface NativeDateRangePickerProps extends ViewProps {
   /** The selected start date as epoch milliseconds. */
-  startDateMillis?: Double | null;
+  startDateMillis?: CodegenTypes.WithDefault<CodegenTypes.Double, -1>;
   /** The selected end date as epoch milliseconds. */
-  endDateMillis?: Double | null;
+  endDateMillis?: CodegenTypes.WithDefault<CodegenTypes.Double, -1>;
   /** The initially displayed month as epoch milliseconds. */
-  initialDisplayedMonthMillis?: Double | null;
+  initialDisplayedMonthMillis?: CodegenTypes.WithDefault<CodegenTypes.Double, -1>;
 
   /** Minimum selectable date as epoch milliseconds. */
-  minDateMillis?: Double | null;
+  minDateMillis?: CodegenTypes.WithDefault<CodegenTypes.Double, -1>;
   /** Maximum selectable date as epoch milliseconds. */
-  maxDateMillis?: Double | null;
+  maxDateMillis?: CodegenTypes.WithDefault<CodegenTypes.Double, -1>;
   /** Start year for the year selector. */
-  yearRangeStart?: Double | null;
+  yearRangeStart?: CodegenTypes.WithDefault<CodegenTypes.Double, -1>;
   /** End year for the year selector. */
-  yearRangeEnd?: Double | null;
+  yearRangeEnd?: CodegenTypes.WithDefault<CodegenTypes.Double, -1>;
 
   /** Initial display mode: 'picker' or 'input'. */
   initialDisplayMode?: string | null;
@@ -65,11 +64,11 @@ export interface NativeDateRangePickerProps extends ViewProps {
   disabled?: boolean | null;
 
   /** Native event handler fired when user confirms selection. */
-  onConfirm?: DirectEventHandler<RangeConfirmEvent> | null;
+  onConfirm?: CodegenTypes.DirectEventHandler<RangeConfirmEvent> | null;
   /** Native event handler fired when user cancels/dismisses. */
-  onCancel?: DirectEventHandler<RangeCancelEvent> | null;
+  onCancel?: CodegenTypes.DirectEventHandler<RangeCancelEvent> | null;
   /** Native event handler fired when selection changes. */
-  onDateChange?: DirectEventHandler<RangeDateChangeEvent> | null;
+  onDateChange?: CodegenTypes.DirectEventHandler<RangeDateChangeEvent> | null;
 }
 
 /**

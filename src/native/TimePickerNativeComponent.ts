@@ -1,25 +1,22 @@
-/* eslint-disable @typescript-eslint/consistent-type-definitions */
-import { codegenNativeComponent, type HostComponent, type ViewProps } from "react-native";
-import type { DirectEventHandler, Int32 } from "react-native/Libraries/Types/CodegenTypes";
+import { codegenNativeComponent, type CodegenTypes, type HostComponent, type ViewProps } from "react-native";
 
 /**
  * Event payload for the onConfirm event.
  */
 export interface ConfirmEvent {
-  selectedTimeMinutes: Int32;
+  selectedTimeMinutes: CodegenTypes.Int32;
 }
 
 /**
  * Event payload for the onCancel event.
  */
-// eslint-disable-next-line @typescript-eslint/no-empty-object-type
 export interface CancelEvent {}
 
 /**
  * Event payload for the onTimeChange event.
  */
 export interface TimeChangeEvent {
-  selectedTimeMinutes: Int32;
+  selectedTimeMinutes: CodegenTypes.Int32;
 }
 
 /**
@@ -28,7 +25,7 @@ export interface TimeChangeEvent {
  */
 export interface NativeTimePickerProps extends ViewProps {
   /** The selected time as minutes from midnight (0-1439). */
-  selectedTimeMinutes?: Int32 | null;
+  selectedTimeMinutes?: CodegenTypes.WithDefault<CodegenTypes.Int32, -1>;
 
   /** Whether to use 24-hour format. If not set, follows system locale. */
   is24Hour?: boolean | null;
@@ -53,11 +50,11 @@ export interface NativeTimePickerProps extends ViewProps {
   disabled?: boolean | null;
 
   /** Native event handler fired when user confirms selection. */
-  onConfirm?: DirectEventHandler<ConfirmEvent> | null;
+  onConfirm?: CodegenTypes.DirectEventHandler<ConfirmEvent> | null;
   /** Native event handler fired when user cancels/dismisses. */
-  onCancel?: DirectEventHandler<CancelEvent> | null;
+  onCancel?: CodegenTypes.DirectEventHandler<CancelEvent> | null;
   /** Native event handler fired when selection changes. */
-  onTimeChange?: DirectEventHandler<TimeChangeEvent> | null;
+  onTimeChange?: CodegenTypes.DirectEventHandler<TimeChangeEvent> | null;
 }
 
 /**

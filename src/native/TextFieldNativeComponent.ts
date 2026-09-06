@@ -1,7 +1,4 @@
-/* eslint-disable @typescript-eslint/no-empty-object-type */
-/* eslint-disable @typescript-eslint/consistent-type-definitions */
-import { codegenNativeComponent, type HostComponent, type ViewProps } from "react-native";
-import type { DirectEventHandler, Double } from "react-native/Libraries/Types/CodegenTypes";
+import { codegenNativeComponent, type CodegenTypes, type HostComponent, type ViewProps } from "react-native";
 
 /**
  * Event payload for the onChangeText event.
@@ -28,7 +25,7 @@ export interface NativeTextFieldProps extends ViewProps {
   /** Enable multiline input */
   multiline?: boolean | null;
   /** Maximum character count */
-  maxLength?: Double | null;
+  maxLength?: CodegenTypes.Double | null;
   /** Password field (hide text) */
   secureTextEntry?: boolean | null;
   /** Show error state styling */
@@ -52,15 +49,15 @@ export interface NativeTextFieldProps extends ViewProps {
   showCounter?: boolean | null;
 
   /** Native event handler fired when text changes */
-  onTextFieldChange?: DirectEventHandler<TextChangeEvent> | null;
+  onTextFieldChange?: CodegenTypes.DirectEventHandler<TextChangeEvent> | null;
   /** Native event handler fired when field gains focus */
-  onTextFieldFocus?: DirectEventHandler<Readonly<{}>> | null;
+  onTextFieldFocus?: CodegenTypes.DirectEventHandler<Readonly<{}>> | null;
   /** Native event handler fired when field loses focus */
-  onTextFieldBlur?: DirectEventHandler<Readonly<{}>> | null;
+  onTextFieldBlur?: CodegenTypes.DirectEventHandler<Readonly<{}>> | null;
   /** Native event handler fired when IME action is pressed */
-  onSubmitEditing?: DirectEventHandler<Readonly<{}>> | null;
+  onSubmitEditing?: CodegenTypes.DirectEventHandler<Readonly<{}>> | null;
   /** Native event handler fired when trailing icon is pressed */
-  onTrailingIconPress?: DirectEventHandler<Readonly<{}>> | null;
+  onTrailingIconPress?: CodegenTypes.DirectEventHandler<Readonly<{}>> | null;
 }
 
 /**

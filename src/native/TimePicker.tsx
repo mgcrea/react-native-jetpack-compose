@@ -1,33 +1,14 @@
-import React, { FunctionComponent, useCallback, useMemo } from "react";
-import { StyleSheet, type NativeSyntheticEvent, type StyleProp, type ViewStyle } from "react-native";
+import type { FunctionComponent } from "react";
+import type { StyleProp, ViewStyle } from "react-native";
 
+import { useNativeEvent, useVoidEvent } from "../hooks/useNativeEvent";
+import { fromMinutesFromMidnight, toMinutesFromMidnight } from "../utils/date";
+import { fieldStyles, useFieldStyle } from "../utils/style";
 import TimePickerNativeComponent, {
-  type CancelEvent,
   type ConfirmEvent,
   type NativeTimePickerProps,
   type TimeChangeEvent,
 } from "./TimePickerNativeComponent";
-
-/**
- * Converts a Date to minutes from midnight (0-1439).
- */
-function toMinutesFromMidnight(time: Date | undefined | null): number | undefined {
-  if (time == null) return undefined;
-  return time.getHours() * 60 + time.getMinutes();
-}
-
-/**
- * Creates a Date object with today's date and the given minutes from midnight.
- */
-function fromMinutesFromMidnight(minutes: number | undefined | null): Date | null {
-  if (minutes == null) return null;
-  const date = new Date();
-  date.setHours(Math.floor(minutes / 60));
-  date.setMinutes(minutes % 60);
-  date.setSeconds(0);
-  date.setMilliseconds(0);
-  return date;
-}
 
 /**
  * Props for the TimePicker component.
@@ -66,6 +47,8 @@ export type TimePickerProps = Omit<
   style?: StyleProp<ViewStyle>;
 };
 
+const toTime = (event: ConfirmEvent | TimeChangeEvent) => fromMinutesFromMidnight(event.selectedTimeMinutes);
+
 /**
  * A time picker component with a text field that opens a time picker dialog.
  *
@@ -100,36 +83,14 @@ export const TimePicker: FunctionComponent<TimePickerProps> = ({
   style,
   ...props
 }) => {
-  // Convert time to minutes from midnight
-  const selectedTimeMinutes = useMemo(() => toMinutesFromMidnight(value), [value]);
-
-  const handleConfirm = useCallback(
-    (event: NativeSyntheticEvent<ConfirmEvent>) => {
-      const minutes = event.nativeEvent.selectedTimeMinutes;
-      onConfirm?.(fromMinutesFromMidnight(minutes));
-    },
-    [onConfirm],
-  );
-
-  const handleCancel = useCallback(
-    (_event: NativeSyntheticEvent<CancelEvent>) => {
-      onCancel?.();
-    },
-    [onCancel],
-  );
-
-  const handleTimeChange = useCallback(
-    (event: NativeSyntheticEvent<TimeChangeEvent>) => {
-      const minutes = event.nativeEvent.selectedTimeMinutes;
-      onChange?.(fromMinutesFromMidnight(minutes));
-    },
-    [onChange],
-  );
+  const handleConfirm = useNativeEvent(onConfirm, toTime);
+  const handleCancel = useVoidEvent(onCancel);
+  const handleTimeChange = useNativeEvent(onChange, toTime);
 
   return (
     <TimePickerNativeComponent
       {...props}
-      selectedTimeMinutes={selectedTimeMinutes}
+      selectedTimeMinutes={toMinutesFromMidnight(value)}
       is24Hour={is24Hour}
       initialDisplayMode={initialDisplayMode}
       showModeToggle={showModeToggle}
@@ -142,13 +103,7 @@ export const TimePicker: FunctionComponent<TimePickerProps> = ({
       onConfirm={handleConfirm}
       onCancel={handleCancel}
       onTimeChange={handleTimeChange}
-      style={[styles.base, style]}
+      style={useFieldStyle(fieldStyles.field, style)}
     />
   );
 };
-
-const styles = StyleSheet.create({
-  base: {
-    minHeight: 64,
-  },
-});

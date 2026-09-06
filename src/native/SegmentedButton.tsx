@@ -1,6 +1,8 @@
-import React, { FunctionComponent, useCallback } from "react";
-import { StyleSheet, type NativeSyntheticEvent, type StyleProp, type ViewStyle } from "react-native";
+import type { FunctionComponent } from "react";
+import type { StyleProp, ViewStyle } from "react-native";
 
+import { useNativeEvent } from "../hooks/useNativeEvent";
+import { fieldStyles, useFieldStyle } from "../utils/style";
 import SegmentedButtonNativeComponent, {
   type NativeSegmentedButtonProps,
   type SegmentedButtonChangeEvent,
@@ -69,6 +71,9 @@ export type MultiSelectSegmentedButtonProps = BaseSegmentedButtonProps & {
  */
 export type SegmentedButtonProps = SingleSelectSegmentedButtonProps | MultiSelectSegmentedButtonProps;
 
+const toValue = (event: SegmentedButtonChangeEvent) => event.value;
+const toValues = (event: SegmentedButtonMultiChangeEvent) => [...event.values];
+
 /**
  * A segmented button component powered by Jetpack Compose's SegmentedButtonRow.
  *
@@ -106,44 +111,35 @@ export type SegmentedButtonProps = SingleSelectSegmentedButtonProps | MultiSelec
  * ```
  */
 export const SegmentedButton: FunctionComponent<SegmentedButtonProps> = (props) => {
-  const { options, value, disabled = false, multiSelect = false, onChange, style, ...restProps } = props;
+  const { options, disabled = false, style, ...restProps } = props;
+  // Narrow the discriminated union once so the handlers below need no casts
+  const single = props.multiSelect ? undefined : props;
+  const multi = props.multiSelect ? props : undefined;
 
-  const handleSingleChange = useCallback(
-    (event: NativeSyntheticEvent<SegmentedButtonChangeEvent>) => {
-      if (!multiSelect && onChange) {
-        (onChange as (value: string) => void)(event.nativeEvent.value);
-      }
-    },
-    [multiSelect, onChange],
-  );
-
-  const handleMultiChange = useCallback(
-    (event: NativeSyntheticEvent<SegmentedButtonMultiChangeEvent>) => {
-      if (multiSelect && onChange) {
-        const values = JSON.parse(event.nativeEvent.values) as string[];
-        (onChange as (values: string[]) => void)(values);
-      }
-    },
-    [multiSelect, onChange],
-  );
+  const handleSingleChange = useNativeEvent(single?.onChange, toValue);
+  const handleMultiChange = useNativeEvent(multi?.onChange, toValues);
 
   return (
     <SegmentedButtonNativeComponent
-      {...restProps}
+      {...omitOwnProps(restProps)}
       segments={options}
-      selectedValue={multiSelect ? undefined : (value as string | null | undefined)}
-      selectedValues={multiSelect ? (value as string[] | undefined) : undefined}
-      multiSelect={multiSelect}
+      selectedValue={single?.value}
+      selectedValues={multi?.value}
+      multiSelect={props.multiSelect ?? false}
       disabled={disabled}
       onValueChange={handleSingleChange}
       onValuesChange={handleMultiChange}
-      style={[styles.base, style]}
+      style={useFieldStyle(fieldStyles.segmented, style)}
     />
   );
 };
 
-const styles = StyleSheet.create({
-  base: {
-    minHeight: 48,
-  },
-});
+/** Strips the wrapper-only props before spreading the remainder onto the native component. */
+function omitOwnProps<T extends { value?: unknown; multiSelect?: unknown; onChange?: unknown }>({
+  value: _value,
+  multiSelect: _multiSelect,
+  onChange: _onChange,
+  ...rest
+}: T) {
+  return rest;
+}

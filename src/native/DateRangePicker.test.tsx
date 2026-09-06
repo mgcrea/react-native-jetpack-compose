@@ -1,6 +1,5 @@
 import { describe, expect, it, jest } from "@jest/globals";
 import { render } from "@testing-library/react-native";
-import React from "react";
 import type { NativeSyntheticEvent } from "react-native";
 
 import { DateRangePicker } from "./DateRangePicker";
@@ -17,31 +16,31 @@ function createNativeEvent<T>(payload: T): NativeSyntheticEvent<T> {
 
 describe("DateRangePicker", () => {
   describe("toEpochMillis conversion (via value prop)", () => {
-    it("handles undefined value", () => {
-      const { getByTestId } = render(<DateRangePicker testID="picker" value={undefined} />);
+    it("handles undefined value", async () => {
+      const { getByTestId } = await render(<DateRangePicker testID="picker" value={undefined} />);
       const picker = getByTestId("picker");
       expect(picker.props.startDateMillis).toBeUndefined();
       expect(picker.props.endDateMillis).toBeUndefined();
     });
 
-    it("handles null value", () => {
-      const { getByTestId } = render(<DateRangePicker testID="picker" value={null} />);
+    it("handles null value", async () => {
+      const { getByTestId } = await render(<DateRangePicker testID="picker" value={null} />);
       const picker = getByTestId("picker");
       expect(picker.props.startDateMillis).toBeUndefined();
       expect(picker.props.endDateMillis).toBeUndefined();
     });
 
-    it("handles DateRange with Date objects", () => {
+    it("handles DateRange with Date objects", async () => {
       const startDate = new Date("2024-01-01T00:00:00.000Z");
       const endDate = new Date("2024-01-15T00:00:00.000Z");
-      const { getByTestId } = render(<DateRangePicker testID="picker" value={{ startDate, endDate }} />);
+      const { getByTestId } = await render(<DateRangePicker testID="picker" value={{ startDate, endDate }} />);
       const picker = getByTestId("picker");
       expect(picker.props.startDateMillis).toBe(startDate.getTime());
       expect(picker.props.endDateMillis).toBe(endDate.getTime());
     });
 
-    it("handles DateRange with null dates", () => {
-      const { getByTestId } = render(
+    it("handles DateRange with null dates", async () => {
+      const { getByTestId } = await render(
         <DateRangePicker testID="picker" value={{ startDate: null, endDate: null }} />,
       );
       const picker = getByTestId("picker");
@@ -49,9 +48,11 @@ describe("DateRangePicker", () => {
       expect(picker.props.endDateMillis).toBeUndefined();
     });
 
-    it("handles DateRange with mixed null/Date values", () => {
+    it("handles DateRange with mixed null/Date values", async () => {
       const startDate = new Date("2024-01-01T00:00:00.000Z");
-      const { getByTestId } = render(<DateRangePicker testID="picker" value={{ startDate, endDate: null }} />);
+      const { getByTestId } = await render(
+        <DateRangePicker testID="picker" value={{ startDate, endDate: null }} />,
+      );
       const picker = getByTestId("picker");
       expect(picker.props.startDateMillis).toBe(startDate.getTime());
       expect(picker.props.endDateMillis).toBeUndefined();
@@ -59,30 +60,30 @@ describe("DateRangePicker", () => {
   });
 
   describe("date constraint props", () => {
-    it("converts minDate to milliseconds", () => {
+    it("converts minDate to milliseconds", async () => {
       const minDate = new Date("2024-01-01");
-      const { getByTestId } = render(<DateRangePicker testID="picker" minDate={minDate} />);
+      const { getByTestId } = await render(<DateRangePicker testID="picker" minDate={minDate} />);
       const picker = getByTestId("picker");
       expect(picker.props.minDateMillis).toBe(minDate.getTime());
     });
 
-    it("converts maxDate to milliseconds", () => {
+    it("converts maxDate to milliseconds", async () => {
       const maxDate = new Date("2024-12-31");
-      const { getByTestId } = render(<DateRangePicker testID="picker" maxDate={maxDate} />);
+      const { getByTestId } = await render(<DateRangePicker testID="picker" maxDate={maxDate} />);
       const picker = getByTestId("picker");
       expect(picker.props.maxDateMillis).toBe(maxDate.getTime());
     });
 
-    it("converts initialDisplayedMonth to milliseconds", () => {
+    it("converts initialDisplayedMonth to milliseconds", async () => {
       const month = new Date("2024-06-15");
-      const { getByTestId } = render(<DateRangePicker testID="picker" initialDisplayedMonth={month} />);
+      const { getByTestId } = await render(<DateRangePicker testID="picker" initialDisplayedMonth={month} />);
       const picker = getByTestId("picker");
       expect(picker.props.initialDisplayedMonthMillis).toBe(month.getTime());
     });
 
-    it("passes yearRange as separate props", () => {
+    it("passes yearRange as separate props", async () => {
       const yearRange = { start: 2020, end: 2030 };
-      const { getByTestId } = render(<DateRangePicker testID="picker" yearRange={yearRange} />);
+      const { getByTestId } = await render(<DateRangePicker testID="picker" yearRange={yearRange} />);
       const picker = getByTestId("picker");
       expect(picker.props.yearRangeStart).toBe(2020);
       expect(picker.props.yearRangeEnd).toBe(2030);
@@ -90,9 +91,9 @@ describe("DateRangePicker", () => {
   });
 
   describe("event handlers", () => {
-    it("onConfirm receives DateRange with Date objects", () => {
+    it("onConfirm receives DateRange with Date objects", async () => {
       const onConfirm = jest.fn();
-      const { getByTestId } = render(<DateRangePicker testID="picker" onConfirm={onConfirm} />);
+      const { getByTestId } = await render(<DateRangePicker testID="picker" onConfirm={onConfirm} />);
       const picker = getByTestId("picker");
 
       const startEpoch = 1704067200000;
@@ -110,9 +111,9 @@ describe("DateRangePicker", () => {
       });
     });
 
-    it("onConfirm handles null dates when millis are falsy", () => {
+    it("onConfirm treats epoch 0 as a valid date", async () => {
       const onConfirm = jest.fn();
-      const { getByTestId } = render(<DateRangePicker testID="picker" onConfirm={onConfirm} />);
+      const { getByTestId } = await render(<DateRangePicker testID="picker" onConfirm={onConfirm} />);
       const picker = getByTestId("picker");
 
       const event = createNativeEvent<RangeConfirmEvent>({
@@ -122,14 +123,14 @@ describe("DateRangePicker", () => {
       picker.props.onConfirm(event);
 
       expect(onConfirm).toHaveBeenCalledWith({
-        startDate: null,
-        endDate: null,
+        startDate: new Date(0),
+        endDate: new Date(0),
       });
     });
 
-    it("onCancel is called without arguments", () => {
+    it("onCancel is called without arguments", async () => {
       const onCancel = jest.fn();
-      const { getByTestId } = render(<DateRangePicker testID="picker" onCancel={onCancel} />);
+      const { getByTestId } = await render(<DateRangePicker testID="picker" onCancel={onCancel} />);
       const picker = getByTestId("picker");
 
       const event = createNativeEvent<RangeCancelEvent>({});
@@ -139,9 +140,9 @@ describe("DateRangePicker", () => {
       expect(onCancel).toHaveBeenCalledWith();
     });
 
-    it("onChange receives DateRange with Date objects", () => {
+    it("onChange receives DateRange with Date objects", async () => {
       const onChange = jest.fn();
-      const { getByTestId } = render(<DateRangePicker testID="picker" onChange={onChange} />);
+      const { getByTestId } = await render(<DateRangePicker testID="picker" onChange={onChange} />);
       const picker = getByTestId("picker");
 
       const startEpoch = 1704067200000;
@@ -158,14 +159,14 @@ describe("DateRangePicker", () => {
       });
     });
 
-    it("onChange handles null dates when millis are falsy", () => {
+    it("onChange receives null for unset range ends", async () => {
       const onChange = jest.fn();
-      const { getByTestId } = render(<DateRangePicker testID="picker" onChange={onChange} />);
+      const { getByTestId } = await render(<DateRangePicker testID="picker" onChange={onChange} />);
       const picker = getByTestId("picker");
 
       const event = createNativeEvent<RangeDateChangeEvent>({
-        startDateMillis: 0,
-        endDateMillis: 0,
+        startDateMillis: null,
+        endDateMillis: null,
       });
       picker.props.onDateChange(event);
 
@@ -177,55 +178,55 @@ describe("DateRangePicker", () => {
   });
 
   describe("default props", () => {
-    it("initialDisplayMode defaults to picker", () => {
-      const { getByTestId } = render(<DateRangePicker testID="picker" />);
+    it("initialDisplayMode defaults to picker", async () => {
+      const { getByTestId } = await render(<DateRangePicker testID="picker" />);
       const picker = getByTestId("picker");
       expect(picker.props.initialDisplayMode).toBe("picker");
     });
 
-    it("showModeToggle defaults to true", () => {
-      const { getByTestId } = render(<DateRangePicker testID="picker" />);
+    it("showModeToggle defaults to true", async () => {
+      const { getByTestId } = await render(<DateRangePicker testID="picker" />);
       const picker = getByTestId("picker");
       expect(picker.props.showModeToggle).toBe(true);
     });
   });
 
   describe("prop passthrough", () => {
-    it("passes title as titleText", () => {
-      const { getByTestId } = render(<DateRangePicker testID="picker" title="Select Dates" />);
+    it("passes title as titleText", async () => {
+      const { getByTestId } = await render(<DateRangePicker testID="picker" title="Select Dates" />);
       const picker = getByTestId("picker");
       expect(picker.props.titleText).toBe("Select Dates");
     });
 
-    it("passes label prop", () => {
-      const { getByTestId } = render(<DateRangePicker testID="picker" label="Trip Dates" />);
+    it("passes label prop", async () => {
+      const { getByTestId } = await render(<DateRangePicker testID="picker" label="Trip Dates" />);
       const picker = getByTestId("picker");
       expect(picker.props.label).toBe("Trip Dates");
     });
 
-    it("passes placeholder prop", () => {
-      const { getByTestId } = render(<DateRangePicker testID="picker" placeholder="Select dates" />);
+    it("passes placeholder prop", async () => {
+      const { getByTestId } = await render(<DateRangePicker testID="picker" placeholder="Select dates" />);
       const picker = getByTestId("picker");
       expect(picker.props.placeholder).toBe("Select dates");
     });
 
-    it("passes disabled prop", () => {
-      const { getByTestId } = render(<DateRangePicker testID="picker" disabled />);
+    it("passes disabled prop", async () => {
+      const { getByTestId } = await render(<DateRangePicker testID="picker" disabled />);
       const picker = getByTestId("picker");
       expect(picker.props.disabled).toBe(true);
     });
   });
 
   describe("style handling", () => {
-    it("applies base minHeight style", () => {
-      const { getByTestId } = render(<DateRangePicker testID="picker" />);
+    it("applies base minHeight style", async () => {
+      const { getByTestId } = await render(<DateRangePicker testID="picker" />);
       const picker = getByTestId("picker");
       expect(picker.props.style).toEqual(expect.arrayContaining([{ minHeight: 64 }]));
     });
 
-    it("merges custom style with base style", () => {
+    it("merges custom style with base style", async () => {
       const customStyle = { backgroundColor: "red" };
-      const { getByTestId } = render(<DateRangePicker testID="picker" style={customStyle} />);
+      const { getByTestId } = await render(<DateRangePicker testID="picker" style={customStyle} />);
       const picker = getByTestId("picker");
       expect(picker.props.style).toEqual(expect.arrayContaining([{ minHeight: 64 }, customStyle]));
     });

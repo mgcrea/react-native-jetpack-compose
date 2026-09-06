@@ -1,8 +1,4 @@
-/* eslint-disable @typescript-eslint/no-empty-object-type */
-/* eslint-disable @typescript-eslint/array-type */
-/* eslint-disable @typescript-eslint/consistent-type-definitions */
-import { codegenNativeComponent, type HostComponent, type ViewProps } from "react-native";
-import type { DirectEventHandler, Double } from "react-native/Libraries/Types/CodegenTypes";
+import { codegenNativeComponent, type CodegenTypes, type HostComponent, type ViewProps } from "react-native";
 
 /**
  * Option type for the SheetPicker.
@@ -43,9 +39,9 @@ export interface NativeSheetPickerProps extends ViewProps {
   /** Whether to automatically dismiss the sheet after selection. Defaults to true. */
   autoDismiss?: boolean | null;
   /** Maximum height of the sheet as a ratio of screen height (0-1). Defaults to 0.9. */
-  maxHeightRatio?: Double | null;
+  maxHeightRatio?: CodegenTypes.Double | null;
   /** Maximum width of the sheet in dp. When set, centers the sheet with this max width. */
-  sheetMaxWidth?: Double | null;
+  sheetMaxWidth?: CodegenTypes.Double | null;
 
   /** Floating label text for the text field. */
   label?: string | null;
@@ -55,9 +51,9 @@ export interface NativeSheetPickerProps extends ViewProps {
   disabled?: boolean | null;
 
   /** Native event handler fired when an option is selected. */
-  onItemSelect?: DirectEventHandler<SheetPickerSelectEvent> | null;
+  onItemSelect?: CodegenTypes.DirectEventHandler<SheetPickerSelectEvent> | null;
   /** Native event handler fired when the sheet is dismissed. */
-  onDismiss?: DirectEventHandler<SheetPickerDismissEvent> | null;
+  onDismiss?: CodegenTypes.DirectEventHandler<SheetPickerDismissEvent> | null;
 }
 
 /**

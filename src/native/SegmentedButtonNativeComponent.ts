@@ -1,7 +1,4 @@
-/* eslint-disable @typescript-eslint/array-type */
-/* eslint-disable @typescript-eslint/consistent-type-definitions */
-import { codegenNativeComponent, type HostComponent, type ViewProps } from "react-native";
-import type { DirectEventHandler, Double } from "react-native/Libraries/Types/CodegenTypes";
+import { codegenNativeComponent, type CodegenTypes, type HostComponent, type ViewProps } from "react-native";
 
 /**
  * Segment option type for the SegmentedButton.
@@ -18,15 +15,14 @@ export type NativeSegmentedButtonOption = Readonly<{
  */
 export type SegmentedButtonChangeEvent = Readonly<{
   value: string;
-  index: Double;
+  index: CodegenTypes.Double;
 }>;
 
 /**
  * Event payload for multi-select mode (onValuesChange).
- * Values are passed as a JSON-encoded string array.
  */
 export type SegmentedButtonMultiChangeEvent = Readonly<{
-  values: string;
+  values: string[];
 }>;
 
 /**
@@ -50,10 +46,10 @@ export interface NativeSegmentedButtonProps extends ViewProps {
   disabled?: boolean | null;
 
   /** Native event handler for single-select mode */
-  onValueChange?: DirectEventHandler<SegmentedButtonChangeEvent> | null;
+  onValueChange?: CodegenTypes.DirectEventHandler<SegmentedButtonChangeEvent> | null;
 
   /** Native event handler for multi-select mode */
-  onValuesChange?: DirectEventHandler<SegmentedButtonMultiChangeEvent> | null;
+  onValuesChange?: CodegenTypes.DirectEventHandler<SegmentedButtonMultiChangeEvent> | null;
 }
 
 /**

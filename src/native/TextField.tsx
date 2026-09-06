@@ -1,6 +1,8 @@
-import React, { FunctionComponent, useCallback } from "react";
-import { type NativeSyntheticEvent, type StyleProp, type ViewStyle } from "react-native";
+import { useMemo, type FunctionComponent } from "react";
+import type { StyleProp, ViewStyle } from "react-native";
 
+import { useNativeEvent, useVoidEvent } from "../hooks/useNativeEvent";
+import { useFieldStyle } from "../utils/style";
 import TextFieldNativeComponent, {
   type NativeTextFieldProps,
   type TextChangeEvent,
@@ -75,6 +77,12 @@ export type TextFieldProps = Omit<
   style?: StyleProp<ViewStyle>;
 };
 
+const toText = (event: TextChangeEvent) => event.text;
+
+const BASE_HEIGHT = 64;
+const HELPER_TEXT_HEIGHT = 20;
+const MULTILINE_EXTRA_HEIGHT = 48; // ~2 extra lines
+
 /**
  * A text field component powered by Jetpack Compose's OutlinedTextField.
  *
@@ -114,34 +122,17 @@ export const TextField: FunctionComponent<TextFieldProps> = ({
   style,
   ...props
 }) => {
-  const handleChange = useCallback(
-    (event: NativeSyntheticEvent<TextChangeEvent>) => {
-      onChange?.(event.nativeEvent.text);
-    },
-    [onChange],
-  );
+  const handleChange = useNativeEvent(onChange, toText);
+  const handleFocus = useVoidEvent(onFocus);
+  const handleBlur = useVoidEvent(onBlur);
+  const handleSubmitEditing = useVoidEvent(onSubmitEditing);
+  const handleTrailingIconPress = useVoidEvent(onTrailingIconPress);
 
-  const handleFocus = useCallback(() => {
-    onFocus?.();
-  }, [onFocus]);
-
-  const handleBlur = useCallback(() => {
-    onBlur?.();
-  }, [onBlur]);
-
-  const handleSubmitEditing = useCallback(() => {
-    onSubmitEditing?.();
-  }, [onSubmitEditing]);
-
-  const handleTrailingIconPress = useCallback(() => {
-    onTrailingIconPress?.();
-  }, [onTrailingIconPress]);
-
-  // Calculate minHeight based on content
-  const baseHeight = 64;
-  const helperTextHeight = helperText || (showCounter && maxLength) ? 20 : 0;
-  const multilineExtraHeight = multiline ? 48 : 0; // ~2 extra lines
-  const minHeight = baseHeight + helperTextHeight + multilineExtraHeight;
+  // Reserve room for the helper/counter row and extra lines so the container does not clip
+  const hasHelperRow = Boolean(helperText) || (showCounter && maxLength != null);
+  const minHeight =
+    BASE_HEIGHT + (hasHelperRow ? HELPER_TEXT_HEIGHT : 0) + (multiline ? MULTILINE_EXTRA_HEIGHT : 0);
+  const baseStyle = useMemo(() => ({ minHeight }), [minHeight]);
 
   return (
     <TextFieldNativeComponent
@@ -168,7 +159,7 @@ export const TextField: FunctionComponent<TextFieldProps> = ({
       onTextFieldBlur={handleBlur}
       onSubmitEditing={handleSubmitEditing}
       onTrailingIconPress={handleTrailingIconPress}
-      style={[{ minHeight }, style]}
+      style={useFieldStyle(baseStyle, style)}
     />
   );
 };

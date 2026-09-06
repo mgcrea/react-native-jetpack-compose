@@ -1,25 +1,22 @@
-/* eslint-disable @typescript-eslint/consistent-type-definitions */
-import { codegenNativeComponent, type HostComponent, type ViewProps } from "react-native";
-import type { DirectEventHandler, Double } from "react-native/Libraries/Types/CodegenTypes";
+import { codegenNativeComponent, type CodegenTypes, type HostComponent, type ViewProps } from "react-native";
 
 /**
  * Event payload for the onConfirm event.
  */
 export interface ConfirmEvent {
-  selectedDateMillis: Double;
+  selectedDateMillis: CodegenTypes.Double;
 }
 
 /**
  * Event payload for the onCancel event.
  */
-// eslint-disable-next-line @typescript-eslint/no-empty-object-type
 export interface CancelEvent {}
 
 /**
  * Event payload for the onDateChange event.
  */
 export interface DateChangeEvent {
-  selectedDateMillis: Double;
+  selectedDateMillis: CodegenTypes.Double;
 }
 
 /**
@@ -28,18 +25,18 @@ export interface DateChangeEvent {
  */
 export interface NativeDatePickerProps extends ViewProps {
   /** The selected date as epoch milliseconds. */
-  selectedDateMillis?: Double | null;
+  selectedDateMillis?: CodegenTypes.WithDefault<CodegenTypes.Double, -1>;
   /** The initially displayed month as epoch milliseconds. */
-  initialDisplayedMonthMillis?: Double | null;
+  initialDisplayedMonthMillis?: CodegenTypes.WithDefault<CodegenTypes.Double, -1>;
 
   /** Minimum selectable date as epoch milliseconds. */
-  minDateMillis?: Double | null;
+  minDateMillis?: CodegenTypes.WithDefault<CodegenTypes.Double, -1>;
   /** Maximum selectable date as epoch milliseconds. */
-  maxDateMillis?: Double | null;
+  maxDateMillis?: CodegenTypes.WithDefault<CodegenTypes.Double, -1>;
   /** Start year for the year selector. */
-  yearRangeStart?: Double | null;
+  yearRangeStart?: CodegenTypes.WithDefault<CodegenTypes.Double, -1>;
   /** End year for the year selector. */
-  yearRangeEnd?: Double | null;
+  yearRangeEnd?: CodegenTypes.WithDefault<CodegenTypes.Double, -1>;
 
   /** Initial display mode: 'picker' or 'input'. */
   initialDisplayMode?: string | null;
@@ -61,11 +58,11 @@ export interface NativeDatePickerProps extends ViewProps {
   disabled?: boolean | null;
 
   /** Native event handler fired when user confirms selection. */
-  onConfirm?: DirectEventHandler<ConfirmEvent> | null;
+  onConfirm?: CodegenTypes.DirectEventHandler<ConfirmEvent> | null;
   /** Native event handler fired when user cancels/dismisses. */
-  onCancel?: DirectEventHandler<CancelEvent> | null;
+  onCancel?: CodegenTypes.DirectEventHandler<CancelEvent> | null;
   /** Native event handler fired when selection changes. */
-  onDateChange?: DirectEventHandler<DateChangeEvent> | null;
+  onDateChange?: CodegenTypes.DirectEventHandler<DateChangeEvent> | null;
 }
 
 /**

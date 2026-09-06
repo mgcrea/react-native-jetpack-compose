@@ -1,27 +1,26 @@
-/* eslint-disable @typescript-eslint/consistent-type-definitions */
-import { codegenNativeComponent, type HostComponent, type ViewProps } from "react-native";
-import type { DirectEventHandler, Int32 } from "react-native/Libraries/Types/CodegenTypes";
+import { codegenNativeComponent, type CodegenTypes, type HostComponent, type ViewProps } from "react-native";
 
 /**
  * Event payload for the onConfirm event.
  */
 export interface RangeConfirmEvent {
-  startTimeMinutes: Int32;
-  endTimeMinutes: Int32;
+  startTimeMinutes: CodegenTypes.Int32;
+  endTimeMinutes: CodegenTypes.Int32;
 }
 
 /**
  * Event payload for the onCancel event.
  */
-// eslint-disable-next-line @typescript-eslint/no-empty-object-type
 export interface RangeCancelEvent {}
 
 /**
  * Event payload for the onTimeChange event.
  */
 export interface RangeTimeChangeEvent {
-  startTimeMinutes: Int32;
-  endTimeMinutes: Int32;
+  /** Null while the start time has not been picked yet. */
+  startTimeMinutes?: CodegenTypes.Int32 | null;
+  /** Null while the end time has not been picked yet. */
+  endTimeMinutes?: CodegenTypes.Int32 | null;
 }
 
 /**
@@ -30,9 +29,9 @@ export interface RangeTimeChangeEvent {
  */
 export interface NativeTimeRangePickerProps extends ViewProps {
   /** The start time as minutes from midnight (0-1439). */
-  startTimeMinutes?: Int32 | null;
+  startTimeMinutes?: CodegenTypes.WithDefault<CodegenTypes.Int32, -1>;
   /** The end time as minutes from midnight (0-1439). */
-  endTimeMinutes?: Int32 | null;
+  endTimeMinutes?: CodegenTypes.WithDefault<CodegenTypes.Int32, -1>;
 
   /** Whether to use 24-hour format. If not set, follows system locale. */
   is24Hour?: boolean | null;
@@ -57,11 +56,11 @@ export interface NativeTimeRangePickerProps extends ViewProps {
   disabled?: boolean | null;
 
   /** Native event handler fired when user confirms selection. */
-  onConfirm?: DirectEventHandler<RangeConfirmEvent> | null;
+  onConfirm?: CodegenTypes.DirectEventHandler<RangeConfirmEvent> | null;
   /** Native event handler fired when user cancels/dismisses. */
-  onCancel?: DirectEventHandler<RangeCancelEvent> | null;
+  onCancel?: CodegenTypes.DirectEventHandler<RangeCancelEvent> | null;
   /** Native event handler fired when selection changes. */
-  onTimeChange?: DirectEventHandler<RangeTimeChangeEvent> | null;
+  onTimeChange?: CodegenTypes.DirectEventHandler<RangeTimeChangeEvent> | null;
 }
 
 /**

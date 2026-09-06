@@ -1,6 +1,8 @@
-import React, { FunctionComponent, useCallback } from "react";
-import { StyleSheet, type NativeSyntheticEvent, type StyleProp, type ViewStyle } from "react-native";
+import type { FunctionComponent } from "react";
+import type { StyleProp, ViewStyle } from "react-native";
 
+import { useNativeEvent } from "../hooks/useNativeEvent";
+import { fieldStyles, useFieldStyle } from "../utils/style";
 import PickerNativeComponent, {
   type NativePickerProps,
   type PickerChangeEvent,
@@ -36,6 +38,8 @@ export type PickerProps = Omit<NativePickerProps, "items" | "selectedValue" | "d
   style?: StyleProp<ViewStyle>;
 };
 
+const toValue = (event: PickerChangeEvent) => event.value;
+
 /**
  * A dropdown picker component powered by Jetpack Compose's ExposedDropdownMenuBox.
  *
@@ -65,12 +69,7 @@ export const Picker: FunctionComponent<PickerProps> = ({
   style,
   ...props
 }) => {
-  const handleValueChange = useCallback(
-    (event: NativeSyntheticEvent<PickerChangeEvent>) => {
-      onChange?.(event.nativeEvent.value);
-    },
-    [onChange],
-  );
+  const handleValueChange = useNativeEvent(onChange, toValue);
 
   return (
     <PickerNativeComponent
@@ -81,13 +80,7 @@ export const Picker: FunctionComponent<PickerProps> = ({
       placeholder={placeholder}
       disabled={disabled}
       onValueChange={handleValueChange}
-      style={[styles.base, style]}
+      style={useFieldStyle(fieldStyles.field, style)}
     />
   );
 };
-
-const styles = StyleSheet.create({
-  base: {
-    minHeight: 64,
-  },
-});

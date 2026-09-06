@@ -1,8 +1,8 @@
-import React, { FunctionComponent, useCallback } from "react";
-import type { NativeSyntheticEvent, StyleProp, ViewStyle } from "react-native";
+import type { FunctionComponent, ReactNode } from "react";
+import type { StyleProp, ViewStyle } from "react-native";
 
+import { useVoidEvent } from "../hooks/useNativeEvent";
 import ModalBottomSheetNativeComponent, {
-  type DismissEvent,
   type NativeModalBottomSheetProps,
 } from "./ModalBottomSheetNativeComponent";
 
@@ -24,11 +24,11 @@ export type ModalBottomSheetProps = Omit<
   /** Custom styles applied to the container. */
   style?: StyleProp<ViewStyle>;
   /** Content to render inside the bottom sheet. */
-  children?: React.ReactNode;
+  children?: ReactNode;
 };
 
 /**
- * A modal bottom sheet component powered by Jetpack Compose's ModalBottomSheet.
+ * A modal bottom sheet component powered by Android's BottomSheetDialog.
  *
  * @example
  * ```tsx
@@ -46,12 +46,7 @@ export const ModalBottomSheet: FunctionComponent<ModalBottomSheetProps> = ({
   children,
   ...props
 }) => {
-  const handleDismiss = useCallback(
-    (_event: NativeSyntheticEvent<DismissEvent>) => {
-      onDismiss?.();
-    },
-    [onDismiss],
-  );
+  const handleDismiss = useVoidEvent(onDismiss);
 
   return (
     <ModalBottomSheetNativeComponent

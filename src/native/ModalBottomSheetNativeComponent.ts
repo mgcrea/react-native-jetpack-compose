@@ -1,7 +1,4 @@
-/* eslint-disable @typescript-eslint/no-empty-object-type */
-/* eslint-disable @typescript-eslint/consistent-type-definitions */
-import { codegenNativeComponent, type HostComponent, type ViewProps } from "react-native";
-import type { DirectEventHandler, Double } from "react-native/Libraries/Types/CodegenTypes";
+import { codegenNativeComponent, type CodegenTypes, type HostComponent, type ViewProps } from "react-native";
 
 /**
  * Event payload for the onDismiss event.
@@ -18,9 +15,9 @@ export interface NativeModalBottomSheetProps extends ViewProps {
   /** Whether to show the drag handle at the top. Defaults to true. */
   showDragHandle?: boolean | null;
   /** Maximum height ratio (0-1) relative to screen height. Defaults to 0.9. */
-  maxHeightRatio?: Double | null;
+  maxHeightRatio?: CodegenTypes.Double | null;
   /** Native event handler fired when the sheet is dismissed. */
-  onDismiss?: DirectEventHandler<DismissEvent> | null;
+  onDismiss?: CodegenTypes.DirectEventHandler<DismissEvent> | null;
 }
 
 /**

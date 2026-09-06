@@ -1,41 +1,17 @@
-import React, { FunctionComponent, useCallback, useMemo } from "react";
-import { StyleSheet, type NativeSyntheticEvent, type StyleProp, type ViewStyle } from "react-native";
+import type { FunctionComponent } from "react";
+import type { StyleProp, ViewStyle } from "react-native";
 
+import { useNativeEvent, useVoidEvent } from "../hooks/useNativeEvent";
+import type { TimeRange } from "../types";
+import { fromMinutesFromMidnight, toMinutesFromMidnight } from "../utils/date";
+import { fieldStyles, useFieldStyle } from "../utils/style";
 import TimeRangePickerNativeComponent, {
   type NativeTimeRangePickerProps,
-  type RangeCancelEvent,
   type RangeConfirmEvent,
   type RangeTimeChangeEvent,
 } from "./TimeRangePickerNativeComponent";
 
-/**
- * Converts a Date to minutes from midnight (0-1439).
- */
-function toMinutesFromMidnight(time: Date | undefined | null): number | undefined {
-  if (time == null) return undefined;
-  return time.getHours() * 60 + time.getMinutes();
-}
-
-/**
- * Creates a Date object with today's date and the given minutes from midnight.
- */
-function fromMinutesFromMidnight(minutes: number | undefined | null): Date | null {
-  if (minutes == null) return null;
-  const date = new Date();
-  date.setHours(Math.floor(minutes / 60));
-  date.setMinutes(minutes % 60);
-  date.setSeconds(0);
-  date.setMilliseconds(0);
-  return date;
-}
-
-/**
- * Represents a time range with start and end times.
- */
-export type TimeRange = {
-  startTime: Date | null;
-  endTime: Date | null;
-};
+export type { TimeRange } from "../types";
 
 /**
  * Props for the TimeRangePicker component.
@@ -72,6 +48,15 @@ export type TimeRangePickerProps = Omit<
   onChange?: (range: TimeRange) => void;
   /** Custom styles applied to the container. */
   style?: StyleProp<ViewStyle>;
+};
+
+const toTimeRange = (event: RangeConfirmEvent | RangeTimeChangeEvent): TimeRange => {
+  // Share one base day so both ends of the range land on the same date
+  const base = new Date();
+  return {
+    startTime: fromMinutesFromMidnight(event.startTimeMinutes, base),
+    endTime: fromMinutesFromMidnight(event.endTimeMinutes, base),
+  };
 };
 
 /**
@@ -111,44 +96,15 @@ export const TimeRangePicker: FunctionComponent<TimeRangePickerProps> = ({
   style,
   ...props
 }) => {
-  // Convert times to minutes from midnight
-  const startTimeMinutes = useMemo(() => toMinutesFromMidnight(value?.startTime), [value?.startTime]);
-  const endTimeMinutes = useMemo(() => toMinutesFromMidnight(value?.endTime), [value?.endTime]);
-
-  const handleConfirm = useCallback(
-    (event: NativeSyntheticEvent<RangeConfirmEvent>) => {
-      const { startTimeMinutes: start, endTimeMinutes: end } = event.nativeEvent;
-      onConfirm?.({
-        startTime: fromMinutesFromMidnight(start),
-        endTime: fromMinutesFromMidnight(end),
-      });
-    },
-    [onConfirm],
-  );
-
-  const handleCancel = useCallback(
-    (_event: NativeSyntheticEvent<RangeCancelEvent>) => {
-      onCancel?.();
-    },
-    [onCancel],
-  );
-
-  const handleTimeChange = useCallback(
-    (event: NativeSyntheticEvent<RangeTimeChangeEvent>) => {
-      const { startTimeMinutes: start, endTimeMinutes: end } = event.nativeEvent;
-      onChange?.({
-        startTime: fromMinutesFromMidnight(start),
-        endTime: fromMinutesFromMidnight(end),
-      });
-    },
-    [onChange],
-  );
+  const handleConfirm = useNativeEvent(onConfirm, toTimeRange);
+  const handleCancel = useVoidEvent(onCancel);
+  const handleTimeChange = useNativeEvent(onChange, toTimeRange);
 
   return (
     <TimeRangePickerNativeComponent
       {...props}
-      startTimeMinutes={startTimeMinutes}
-      endTimeMinutes={endTimeMinutes}
+      startTimeMinutes={toMinutesFromMidnight(value?.startTime)}
+      endTimeMinutes={toMinutesFromMidnight(value?.endTime)}
       is24Hour={is24Hour}
       initialDisplayMode={initialDisplayMode}
       showModeToggle={showModeToggle}
@@ -161,13 +117,7 @@ export const TimeRangePicker: FunctionComponent<TimeRangePickerProps> = ({
       onConfirm={handleConfirm}
       onCancel={handleCancel}
       onTimeChange={handleTimeChange}
-      style={[styles.base, style]}
+      style={useFieldStyle(fieldStyles.field, style)}
     />
   );
 };
-
-const styles = StyleSheet.create({
-  base: {
-    minHeight: 64,
-  },
-});
